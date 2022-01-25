@@ -16,8 +16,7 @@ type Config struct {
 }
 
 func (c *Config) GetURL() string {
-	res := "postgres://"
-	res += fmt.Sprintf("%s:%s@%s:%s/%s", c.UserName, c.Password, c.Host, c.Port, c.DBName)
+	res := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.UserName, c.Password, c.Host, c.Port, c.DBName)
 	return res
 }
 func NewConfig() (*Config, error) {

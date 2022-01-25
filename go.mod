@@ -1,4 +1,4 @@
-module Task1
+module github.com/HekapOo-hub/Task1
 
 go 1.17
 

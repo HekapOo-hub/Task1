@@ -3,10 +3,10 @@ package model
 import "fmt"
 
 type Human struct {
-	Id   int
-	Name string
-	Male bool
-	Age  int
+	Id   int    `json:"id" form:"id"`
+	Name string `json:"name" form:"name"`
+	Male bool   `json:"male" form:"male"`
+	Age  int    `json:"age" form:"age"`
 }
 
 func (h Human) String() string {

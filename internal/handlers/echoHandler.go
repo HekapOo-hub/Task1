@@ -1,46 +1,33 @@
 package handlers
 
 import (
-	"Task1/internal/model"
-	"Task1/internal/service"
 	"context"
+	"github.com/HekapOo-hub/Task1/internal/model"
+	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 )
 
-type EchoHandler struct {
-	*echo.Echo
-	Service service.Service
+type Handler struct {
+	service service.Service
 }
 
-func (e *EchoHandler) Register() {
-	e.GET("/create", e.createHuman)
-	e.GET("/get", e.getHuman)
-	e.GET("/update", e.updateHuman)
-	e.GET("/delete", e.deleteHuman)
+func NewHandler(s service.Service) *Handler {
+	return &Handler{service: s}
 }
-func (e *EchoHandler) createHuman(c echo.Context) error {
-	name := c.QueryParam("name")
-	maleStr := c.QueryParam("male")
-	ageStr := c.QueryParam("age")
-	var male bool
-	if maleStr == "true" {
-		male = true
-	} else {
-		male = false
+func (h *Handler) CreateHuman(c echo.Context) error {
+	human := new(model.Human)
+	if err := c.Bind(human); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	age, err := strconv.Atoi(ageStr)
+	err := h.service.Create(context.Background(), *human)
 	if err != nil {
-		return err
-	}
-	err = e.Service.Create(context.Background(), model.Human{Name: name, Male: male, Age: age})
-	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusNoContent, err)
 	}
 	return c.String(http.StatusCreated, "human info was created")
 }
-func (e *EchoHandler) updateHuman(c echo.Context) error {
+func (h *Handler) UpdateHuman(c echo.Context) error {
 	name := c.QueryParam("name")
 	maleStr := c.QueryParam("male")
 	ageStr := c.QueryParam("age")
@@ -59,31 +46,31 @@ func (e *EchoHandler) updateHuman(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = e.Service.Update(context.Background(), id, model.Human{Name: name, Male: male, Age: age})
+	err = h.service.Update(context.Background(), id, model.Human{Name: name, Male: male, Age: age})
 	if err != nil {
 		return err
 	}
 	return c.String(http.StatusOK, "human info was updated")
 }
-func (e *EchoHandler) getHuman(c echo.Context) error {
+func (h *Handler) GetHuman(c echo.Context) error {
 	idStr := c.QueryParam("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return err
 	}
-	h, err := e.Service.Get(context.Background(), id)
+	human, err := h.service.Get(context.Background(), id)
 	if err != nil {
 		return err
 	}
-	return c.String(http.StatusOK, h.String())
+	return c.String(http.StatusOK, human.String())
 }
-func (e *EchoHandler) deleteHuman(c echo.Context) error {
+func (h *Handler) DeleteHuman(c echo.Context) error {
 	idStr := c.QueryParam("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return err
 	}
-	err = e.Service.Delete(context.Background(), id)
+	err = h.service.Delete(context.Background(), id)
 	if err != nil {
 		return err
 	}

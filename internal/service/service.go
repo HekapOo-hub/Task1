@@ -1,9 +1,9 @@
 package service
 
 import (
-	"Task1/internal/model"
-	"Task1/internal/repository"
 	"context"
+	"github.com/HekapOo-hub/Task1/internal/model"
+	"github.com/HekapOo-hub/Task1/internal/repository"
 )
 
 type Service struct {

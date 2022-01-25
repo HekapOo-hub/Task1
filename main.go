@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	cfg, err := config.NewConfig()
 	if err != nil {
 		fmt.Println(err)
@@ -28,8 +29,8 @@ func main() {
 	e := echo.New()
 	e.POST("/create", h.CreateHuman)
 	e.GET("/get", h.GetHuman)
-	e.GET("/update", h.UpdateHuman)
-	e.GET("/delete", h.DeleteHuman)
+	e.PATCH("/update", h.UpdateHuman)
+	e.DELETE("/delete", h.DeleteHuman)
 	err = e.Start(":1323")
 	if err != nil {
 		fmt.Println(err)

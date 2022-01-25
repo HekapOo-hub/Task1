@@ -9,6 +9,10 @@ type Human struct {
 	Age  int    `json:"age" form:"age"`
 }
 
+type Id struct {
+	Id int `json:"id" form:"id"`
+}
+
 func (h Human) String() string {
 	var male string
 	if h.Male {

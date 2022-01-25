@@ -6,7 +6,6 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"strconv"
 )
 
 type Handler struct {
@@ -28,51 +27,35 @@ func (h *Handler) CreateHuman(c echo.Context) error {
 	return c.String(http.StatusCreated, "human info was created")
 }
 func (h *Handler) UpdateHuman(c echo.Context) error {
-	name := c.QueryParam("name")
-	maleStr := c.QueryParam("male")
-	ageStr := c.QueryParam("age")
-	idStr := c.QueryParam("id")
-	var male bool
-	if maleStr == "true" {
-		male = true
-	} else {
-		male = false
+	human := new(model.Human)
+	if err := c.Bind(human); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	age, err := strconv.Atoi(ageStr)
+	err := h.service.Update(context.Background(), human.Id, *human)
 	if err != nil {
-		return err
-	}
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return err
-	}
-	err = h.service.Update(context.Background(), id, model.Human{Name: name, Male: male, Age: age})
-	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusNoContent, err)
 	}
 	return c.String(http.StatusOK, "human info was updated")
 }
 func (h *Handler) GetHuman(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return err
+	id := new(model.Id)
+	if err := c.Bind(id); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	human, err := h.service.Get(context.Background(), id)
+	human, err := h.service.Get(context.Background(), id.Id)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusNoContent, err)
 	}
 	return c.String(http.StatusOK, human.String())
 }
 func (h *Handler) DeleteHuman(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return err
+	id := new(model.Id)
+	if err := c.Bind(id); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	err = h.service.Delete(context.Background(), id)
+	err := h.service.Delete(context.Background(), id.Id)
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusNoContent, err)
 	}
 	return c.String(http.StatusOK, "human's info was deleted")
 }

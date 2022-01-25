@@ -15,10 +15,10 @@ type EchoHandler struct {
 }
 
 func (e *EchoHandler) Register() {
-	e.GET("create", e.createHuman)
-	e.GET("get", e.getHuman)
-	e.GET("update", e.updateHuman)
-	e.GET("delete", e.deleteHuman)
+	e.GET("/create", e.createHuman)
+	e.GET("/get", e.getHuman)
+	e.GET("/update", e.updateHuman)
+	e.GET("/delete", e.deleteHuman)
 }
 func (e *EchoHandler) createHuman(c echo.Context) error {
 	name := c.QueryParam("name")

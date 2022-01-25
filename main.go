@@ -16,6 +16,7 @@ func main() {
 		return
 	}
 	echo := &handlers.EchoHandler{echo2.New(), service.Service{repo}}
+	echo.Register()
 	err = echo.Start(":1323")
 	if err != nil {
 		fmt.Println(err)

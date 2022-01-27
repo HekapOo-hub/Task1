@@ -1,0 +1,23 @@
+version: '3.5'
+
+services:
+  crud:
+    restart: always
+    image: crud
+    ports:
+      - "1323:1323"
+    environment:
+      DB_HOST: "mongodb://datastore:27017"
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: "vitalijprokopenya"
+      POSTGRES_PASSWORD: "1234"
+    ports:
+        - "5431:5432"
+
+  mongo:
+    image: mongo:alpine
+    ports:
+      - "27017:27017"
+

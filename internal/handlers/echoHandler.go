@@ -22,7 +22,7 @@ func (h *Handler) CreateHuman(c echo.Context) error {
 	}
 	err := h.service.Create(context.Background(), *human)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNoContent, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusCreated, "human info was created")
 }
@@ -33,7 +33,7 @@ func (h *Handler) UpdateHuman(c echo.Context) error {
 	}
 	err := h.service.Update(context.Background(), human.Id, *human)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNoContent, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, "human info was updated")
 }
@@ -44,7 +44,7 @@ func (h *Handler) GetHuman(c echo.Context) error {
 	}
 	human, err := h.service.Get(context.Background(), id.Id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNoContent, err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, human.String())
 }
@@ -55,7 +55,7 @@ func (h *Handler) DeleteHuman(c echo.Context) error {
 	}
 	err := h.service.Delete(context.Background(), id.Id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNoContent, err)
+		return echo.NewHTTPError(http.StatusNoContent, err.Error())
 	}
 	return c.String(http.StatusOK, "human's info was deleted")
 }

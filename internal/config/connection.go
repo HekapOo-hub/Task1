@@ -8,10 +8,10 @@ import (
 // urlExample := "postgres://username:password@localhost:5432/database_name"
 type Config struct {
 	UserName string `env:"POSTGRES_USER" envDefault:"vitalijprokopenya"`
-	Host     string `env:"HOST" envDefault:"localhost"`
+	Host     string `env:"HOST" envDefault:"postgres"`
 	Port     string `env:"PORT" envDefault:"5432"`
 	Password string `env:"POSTGRES_PASSWORD" envDefault:"1234"`
-	DBName   string `env:"PORT" envDefault:"vitalijprokopenya"`
+	DBName   string `env:"DB_NAME" envDefault:"vitalijprokopenya"`
 	URL      string `env:"URL" envDefault:"postgres://"`
 }
 

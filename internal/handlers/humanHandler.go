@@ -10,14 +10,14 @@ import (
 )
 
 type HumanHandler struct {
-	service *service.Service
+	service *service.HumanService
 }
 
-func NewHandler(s *service.Service) *HumanHandler {
+func NewHumanHandler(s *service.HumanService) *HumanHandler {
 	return &HumanHandler{service: s}
 }
 func (h *HumanHandler) Create(c echo.Context) error {
-	human := new(request.CreateRequest)
+	human := new(request.CreateHumanRequest)
 	if err := c.Bind(human); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in create")
 		return echo.NewHTTPError(http.StatusBadRequest, err)
@@ -30,7 +30,7 @@ func (h *HumanHandler) Create(c echo.Context) error {
 	return c.String(http.StatusCreated, "human info was created")
 }
 func (h *HumanHandler) Update(c echo.Context) error {
-	human := new(request.UpdateRequest)
+	human := new(request.UpdateHumanRequest)
 	if err := c.Bind(human); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in update")
 		return echo.NewHTTPError(http.StatusBadRequest, err)

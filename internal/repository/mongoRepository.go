@@ -20,14 +20,14 @@ func Disconnect(ctx context.Context, m *mongo.Client) {
 	}
 }
 func NewMongoRepository(c *mongo.Client) Repository {
-	collection := c.Database("myDatabase").Collection("people")
+	collection := c.Database("myDatabase").Collection("users")
 	return &MongoRepository{collection: collection}
 }
 func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {
 	h.Id = uuid.NewV4().String()
 	_, err := m.collection.InsertOne(ctx, h)
 	if err != nil {
-		return fmt.Errorf("mongo creation error %w", err)
+		return fmt.Errorf("mongo creation human error %w", err)
 	}
 	return nil
 }
@@ -37,7 +37,7 @@ func (m *MongoRepository) Get(ctx context.Context, name string) (*model.Human, e
 	filter := bson.D{{"name", name}}
 	err := m.collection.FindOne(ctx, filter).Decode(&res)
 	if err != nil {
-		return nil, fmt.Errorf("mongo get error %w", err)
+		return nil, fmt.Errorf("mongo get human error %w", err)
 	}
 	return &res, nil
 }
@@ -51,7 +51,7 @@ func (m *MongoRepository) Update(ctx context.Context, id string, h model.Human) 
 		}}
 	_, err := m.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("mongo update error %w", err)
+		return fmt.Errorf("mongo update human error %w", err)
 	}
 	return nil
 }
@@ -60,7 +60,7 @@ func (m *MongoRepository) Delete(ctx context.Context, id string) error {
 	filter := bson.D{{"id", id}}
 	_, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("mongo delete error %w", err)
+		return fmt.Errorf("mongo delete human error %w", err)
 	}
 	return nil
 }

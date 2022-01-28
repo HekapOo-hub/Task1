@@ -9,10 +9,10 @@ import (
 )
 
 type Repository interface {
-	Create(context.Context, model.Human) error
-	Get(context.Context, string) (*model.Human, error)
-	Update(context.Context, string, model.Human) error
-	Delete(context.Context, string) error
+	Create(ctx context.Context, human model.Human) error
+	Get(ctx context.Context, name string) (*model.Human, error)
+	Update(ctx context.Context, id string, human model.Human) error
+	Delete(ctx context.Context, id string) error
 }
 type PostgresRepository struct {
 	db *pgxpool.Pool
@@ -24,7 +24,7 @@ func NewRepository(p *pgxpool.Pool) Repository {
 
 func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
 	h.Id = uuid.NewV1().String()
-	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
+	query := "insert into people (id,name,male,age,password) values ($1,$2,$3,$4)"
 	_, err := r.db.Exec(ctx, query, h.Id, h.Name, h.Male, h.Age)
 	if err != nil {
 		return fmt.Errorf("postgres  creation error %w", err)

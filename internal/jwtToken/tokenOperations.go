@@ -9,8 +9,8 @@ import (
 var key = []byte("superSecretKey")
 
 type CustomClaims struct {
-	login string
-	role  string
+	Login string
+	Role  string
 	jwt.StandardClaims
 }
 
@@ -26,13 +26,17 @@ func EncodeToken(user *model.User) (string, error) {
 }
 func DecodeToken(token string) (string, string, error) {
 	// Parse the token
-	tokenType, err := jwt.ParseWithClaims(string(key), &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	tokenType, err := jwt.ParseWithClaims(token, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return key, nil
 	})
+	if err != nil {
+		return "", "", fmt.Errorf("token parsing error %w", err)
+	}
 	// Validate the token and return the custom claims
 	if claims, ok := tokenType.Claims.(*CustomClaims); ok && tokenType.Valid {
-		return claims.login, claims.role, nil
+
+		return claims.Login, claims.Role, nil
 	} else {
-		return "", "", fmt.Errorf("token parsing error %w", err)
+		return "", "", fmt.Errorf("token valid error %w", err)
 	}
 }

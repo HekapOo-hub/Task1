@@ -6,6 +6,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/jwtToken"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -77,6 +78,7 @@ func (u *UserService) Authentication(login string, password string) (string, err
 	return token, nil
 }
 func (u *UserService) Get(token, loginToGet string) (*model.User, error) {
+	log.WithField("token", token).Warn("AAAAAAAAAAA")
 	login, role, err := jwtToken.DecodeToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("service layer update function %w", err)

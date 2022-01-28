@@ -7,18 +7,21 @@ import (
 )
 
 type Service struct {
-	repository.Repo
+	r repository.Repo
 }
 
+func NewService(r repository.Repo) *Service {
+	return &Service{r: r}
+}
 func (s *Service) CreateHuman(h model.Human) error {
-	return s.Create(context.Background(), h)
+	return s.r.Create(context.Background(), h)
 }
-func (s *Service) DeleteHuman(id int) error {
-	return s.Repo.Delete(context.Background(), id)
+func (s *Service) DeleteHuman(id string) error {
+	return s.r.Delete(context.Background(), id)
 }
-func (s *Service) UpdateHuman(id int, h model.Human) error {
-	return s.Repo.Update(context.Background(), id, h)
+func (s *Service) UpdateHuman(id string, h model.Human) error {
+	return s.r.Update(context.Background(), id, h)
 }
-func (s *Service) GetHumanInfo(id int) (*model.Human, error) {
-	return s.Repo.Get(context.Background(), id)
+func (s *Service) GetHumanInfo(name string) (*model.Human, error) {
+	return s.r.Get(context.Background(), name)
 }

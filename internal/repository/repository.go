@@ -5,34 +5,36 @@ import (
 	"fmt"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/jackc/pgx/v4/pgxpool"
+	uuid "github.com/satori/go.uuid"
 )
 
 type Repo interface {
 	Create(context.Context, model.Human) error
-	Get(context.Context, int) (*model.Human, error)
-	Update(context.Context, int, model.Human) error
-	Delete(context.Context, int) error
+	Get(context.Context, string) (*model.Human, error)
+	Update(context.Context, string, model.Human) error
+	Delete(context.Context, string) error
 }
-type Repository struct {
+type PostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewRepository(p *pgxpool.Pool) *Repository {
-	return &Repository{db: p}
+func NewRepository(p *pgxpool.Pool) Repo {
+	return &PostgresRepository{db: p}
 }
 
-func (r *Repository) Create(ctx context.Context, h model.Human) error {
-	query := "insert into people (name,male,age) values ($1,$2,$3)"
-	_, err := r.db.Exec(ctx, query, h.Name, h.Male, h.Age)
+func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
+	h.Id = uuid.NewV1().String()
+	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
+	_, err := r.db.Exec(ctx, query, h.Id, h.Name, h.Male, h.Age)
 	if err != nil {
 		return fmt.Errorf("postgres  creation error %w", err)
 	}
 	return nil
 }
 
-func (r *Repository) Get(ctx context.Context, id int) (*model.Human, error) {
+func (r *PostgresRepository) Get(ctx context.Context, name string) (*model.Human, error) {
 	h := model.Human{}
-	row := r.db.QueryRow(ctx, "select * from people where id=$1", id)
+	row := r.db.QueryRow(ctx, `select * from people where name=$1`, name)
 	err := row.Scan(&h.Id, &h.Name, &h.Male, &h.Age)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get error %w", err)
@@ -40,7 +42,7 @@ func (r *Repository) Get(ctx context.Context, id int) (*model.Human, error) {
 		return &h, nil
 	}
 }
-func (r *Repository) Update(ctx context.Context, id int, h model.Human) error {
+func (r *PostgresRepository) Update(ctx context.Context, id string, h model.Human) error {
 	query := "update people set  name=$1,male=$2,age=$3 where id=$4"
 	_, err := r.db.Exec(ctx, query, h.Name, h.Male, h.Age, id)
 	if err != nil {
@@ -48,7 +50,7 @@ func (r *Repository) Update(ctx context.Context, id int, h model.Human) error {
 	}
 	return nil
 }
-func (r *Repository) Delete(ctx context.Context, id int) error {
+func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx, "delete from people where id=$1", id)
 	if err != nil {
 		return fmt.Errorf("postgres delete error %w", err)

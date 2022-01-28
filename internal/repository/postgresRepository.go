@@ -8,7 +8,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Repo interface {
+type Repository interface {
 	Create(context.Context, model.Human) error
 	Get(context.Context, string) (*model.Human, error)
 	Update(context.Context, string, model.Human) error
@@ -18,7 +18,7 @@ type PostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewRepository(p *pgxpool.Pool) Repo {
+func NewRepository(p *pgxpool.Pool) Repository {
 	return &PostgresRepository{db: p}
 }
 

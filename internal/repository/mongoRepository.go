@@ -19,7 +19,7 @@ func Disconnect(ctx context.Context, m *mongo.Client) {
 		log.WithField("error", err).Errorf("mongo disconnect error")
 	}
 }
-func NewMongoRepository(c *mongo.Client) Repo {
+func NewMongoRepository(c *mongo.Client) Repository {
 	collection := c.Database("myDatabase").Collection("people")
 	return &MongoRepository{collection: collection}
 }

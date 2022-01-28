@@ -20,7 +20,7 @@ func main() {
 	log.SetLevel(log.WarnLevel)
 	fmt.Println("Enter 1 to create Postgres db, 2- to create mongo db")
 	n := os.Getenv("CASE")
-	h := &handlers.Handler{}
+	h := &handlers.HumanHandler{}
 
 	switch n {
 	case "1":
@@ -56,10 +56,10 @@ func main() {
 		return
 	}
 	e := echo.New()
-	e.POST("/create", h.CreateHuman)
-	e.GET("/get", h.GetHuman)
-	e.PATCH("/update", h.UpdateHuman)
-	e.DELETE("/delete", h.DeleteHuman)
+	e.POST("/create", h.Create)
+	e.GET("/get/:name", h.Get)
+	e.PATCH("/update", h.Update)
+	e.DELETE("/delete/:id", h.Delete)
 	err := e.Start(":1323")
 	if err != nil {
 		log.WithField("error", err).Warn("error with starting an echo server")

@@ -20,7 +20,6 @@ func main() {
 	log.SetLevel(log.WarnLevel)
 	fmt.Println("Enter 1 to create Postgres db, 2- to create mongo db")
 	n := os.Getenv("CASE")
-	log.WithField("n", n).Warn("Attention!!!")
 	h := &handlers.Handler{}
 
 	switch n {
@@ -49,7 +48,7 @@ func main() {
 			log.WithFields(log.Fields{"error": err, "uri": uri}).Warn("error with connecting to mongodb")
 			return
 		}
-		defer conn.Disconnect(context.Background())
+		defer config.Disconnect(context.Background(), conn)
 		repo := repository.NewMongoRepository(conn)
 		h = handlers.NewHandler(service.NewService(repo))
 	default:

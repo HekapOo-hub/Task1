@@ -48,7 +48,7 @@ func main() {
 			log.WithFields(log.Fields{"error": err, "uri": uri}).Warn("error with connecting to mongodb")
 			return
 		}
-		defer config.Disconnect(context.Background(), conn)
+		defer repository.Disconnect(context.Background(), conn)
 		repo := repository.NewMongoRepository(conn)
 		h = handlers.NewHandler(service.NewService(repo))
 	default:

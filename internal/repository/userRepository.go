@@ -6,6 +6,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/model"
 	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -36,7 +37,7 @@ func (m *MongoUserRepository) Create(ctx context.Context, user model.User) error
 
 func (m *MongoUserRepository) Get(ctx context.Context, login string) (*model.User, error) {
 	var res model.User
-	filter := bson.D{{"login", login}}
+	filter := bson.D{primitive.E{Key: "login", Value: login}}
 	err := m.collection.FindOne(ctx, filter).Decode(&res)
 	if err != nil {
 		return nil, fmt.Errorf("mongo get user error %w", err)
@@ -45,7 +46,7 @@ func (m *MongoUserRepository) Get(ctx context.Context, login string) (*model.Use
 }
 
 func (m *MongoUserRepository) Delete(ctx context.Context, login string) error {
-	filter := bson.D{{"login", login}}
+	filter := bson.D{primitive.E{Key: "login", Value: login}}
 	_, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("mongo delete user error %w", err)
@@ -54,10 +55,10 @@ func (m *MongoUserRepository) Delete(ctx context.Context, login string) error {
 }
 
 func (m *MongoUserRepository) Update(ctx context.Context, login string, newUser model.User) error {
-	filter := bson.D{{"login", login}}
+	filter := bson.D{primitive.E{Key: "login", Value: login}}
 	update := bson.D{
-		{"$set", bson.D{
-			{"login", newUser.Login}, {"password", newUser.Password},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "login", Value: newUser.Login}, primitive.E{Key: "password", Value: newUser.Password},
 		},
 		}}
 	_, err := m.collection.UpdateOne(ctx, filter, update)

@@ -14,7 +14,7 @@ type MongoRepository struct {
 	collection *mongo.Collection
 }
 
-func Disconnect(ctx context.Context, m *mongo.Client) {
+func MongoDisconnect(ctx context.Context, m *mongo.Client) {
 	if err := m.Disconnect(ctx); err != nil {
 		log.WithField("error", err).Errorf("mongo disconnect error")
 	}

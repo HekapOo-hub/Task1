@@ -50,8 +50,8 @@ func (u *UserHandler) Get(c echo.Context) error {
 	login := c.Param("login")
 	token, err := c.Cookie("token")
 	if err != nil {
-		log.WithField("error", err).Warn("error in fetching cookie in get")
-		return echo.NewHTTPError(http.StatusBadRequest, "error in fetching cookie in get")
+		log.WithField("error", err).Warn("error in fetching cookie in get user")
+		return echo.NewHTTPError(http.StatusBadRequest, "error in fetching cookie in get user")
 	}
 	user, err := u.service.Get(token.Value, login)
 	if err != nil {
@@ -64,17 +64,17 @@ func (u *UserHandler) Get(c echo.Context) error {
 func (u *UserHandler) Update(c echo.Context) error {
 	token, err := c.Cookie("token")
 	if err != nil {
-		log.WithField("error", err).Warn("error in fetching cookie in update")
-		return echo.NewHTTPError(http.StatusBadRequest, "error in fetching cookie in update")
+		log.WithField("error", err).Warn("error in fetching cookie in update user")
+		return echo.NewHTTPError(http.StatusBadRequest, "error in fetching cookie in update user")
 	}
 	info := new(request.UpdateUserRequest)
 	if err := c.Bind(info); err != nil {
-		log.WithField("error", err).Warn("error in binding structure with env variables in update")
+		log.WithField("error", err).Warn("error in binding structure with env variables in update user")
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 	err = u.service.UpdateUser(token.Value, info.OldLogin, model.User{Login: info.NewLogin, Password: info.NewPassword})
 	if err != nil {
-		log.WithField("error", err).Warn("error in update handler layer")
+		log.WithField("error", err).Warn("error in update user. layer:handler")
 		return fmt.Errorf("error in update handler layer %w", err)
 	}
 	return c.String(http.StatusOK, "user was updated")

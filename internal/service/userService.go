@@ -6,7 +6,6 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/jwtToken"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,6 +31,11 @@ func (u *UserService) CreateUser(login string, password string) error {
 }
 
 func (u *UserService) UpdateUser(token string, oldLogin string, newUser model.User) error {
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("error with hashing user's password in update function %w", err)
+	}
+	newUser.Password = string(hashedPass)
 	login, role, err := jwtToken.DecodeToken(token)
 	if err != nil {
 		return fmt.Errorf("service layer update function %w", err)
@@ -78,7 +82,6 @@ func (u *UserService) Authentication(login string, password string) (string, err
 	return token, nil
 }
 func (u *UserService) Get(token, loginToGet string) (*model.User, error) {
-	log.WithField("token", token).Warn("AAAAAAAAAAA")
 	login, role, err := jwtToken.DecodeToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("service layer update function %w", err)

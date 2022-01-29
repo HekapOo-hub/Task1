@@ -24,7 +24,7 @@ func NewRepository(p *pgxpool.Pool) Repository {
 
 func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
 	h.Id = uuid.NewV1().String()
-	query := "insert into people (id,name,male,age,password) values ($1,$2,$3,$4)"
+	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
 	_, err := r.db.Exec(ctx, query, h.Id, h.Name, h.Male, h.Age)
 	if err != nil {
 		return fmt.Errorf("postgres  creation error %w", err)

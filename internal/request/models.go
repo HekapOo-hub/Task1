@@ -6,7 +6,7 @@ type CreateHumanRequest struct {
 	Age  int    `json:"age" form:"age"`
 }
 type UpdateHumanRequest struct {
-	Id      string `json:"id" form:"name"`
+	Id      string `json:"id" form:"id"`
 	NewName string `json:"name" form:"name"`
 	NewMale bool   `json:"male" form:"male"`
 	NewAge  int    `json:"age" form:"age"`

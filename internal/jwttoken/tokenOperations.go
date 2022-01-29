@@ -1,4 +1,4 @@
-package jwtToken
+package jwttoken
 
 import (
 	"fmt"
@@ -22,6 +22,7 @@ func EncodeToken(user *model.User) (string, error) {
 	}
 	// Sign token and return
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	return token.SignedString(key)
 }
 func DecodeToken(token string) (string, string, error) {

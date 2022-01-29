@@ -20,12 +20,12 @@ func MongoDisconnect(ctx context.Context, m *mongo.Client) {
 		log.WithField("error", err).Errorf("mongo disconnect error")
 	}
 }
-func NewMongoRepository(c *mongo.Client) Repository {
+func NewMongoRepository(c *mongo.Client) *MongoRepository {
 	collection := c.Database("myDatabase").Collection("users")
 	return &MongoRepository{collection: collection}
 }
 func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {
-	h.Id = uuid.NewV4().String()
+	h.ID = uuid.NewV4().String()
 	_, err := m.collection.InsertOne(ctx, h)
 	if err != nil {
 		return fmt.Errorf("mongo creation human error %w", err)

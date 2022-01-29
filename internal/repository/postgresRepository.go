@@ -18,14 +18,14 @@ type PostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewRepository(p *pgxpool.Pool) Repository {
+func NewRepository(p *pgxpool.Pool) *PostgresRepository {
 	return &PostgresRepository{db: p}
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
-	h.Id = uuid.NewV1().String()
+	h.ID = uuid.NewV1().String()
 	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
-	_, err := r.db.Exec(ctx, query, h.Id, h.Name, h.Male, h.Age)
+	_, err := r.db.Exec(ctx, query, h.ID, h.Name, h.Male, h.Age)
 	if err != nil {
 		return fmt.Errorf("postgres  creation error %w", err)
 	}
@@ -35,7 +35,7 @@ func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
 func (r *PostgresRepository) Get(ctx context.Context, name string) (*model.Human, error) {
 	h := model.Human{}
 	row := r.db.QueryRow(ctx, `select * from people where name=$1`, name)
-	err := row.Scan(&h.Id, &h.Name, &h.Male, &h.Age)
+	err := row.Scan(&h.ID, &h.Name, &h.Male, &h.Age)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get error %w", err)
 	} else {

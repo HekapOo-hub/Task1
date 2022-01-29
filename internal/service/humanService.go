@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/HekapOo-hub/Task1/internal/jwtToken"
+	"github.com/HekapOo-hub/Task1/internal/jwttoken"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 )
@@ -21,7 +21,7 @@ func NewService(r repository.Repository) *HumanService {
 	return &HumanService{r: r}
 }
 func (s *HumanService) Create(token string, h model.Human) error {
-	_, role, err := jwtToken.DecodeToken(token)
+	_, role, err := jwttoken.DecodeToken(token)
 	if err != nil {
 		return fmt.Errorf("humanService layer create function %w", err)
 	}
@@ -34,7 +34,7 @@ func (s *HumanService) Create(token string, h model.Human) error {
 	}
 }
 func (s *HumanService) Delete(token string, id string) error {
-	_, role, err := jwtToken.DecodeToken(token)
+	_, role, err := jwttoken.DecodeToken(token)
 	if err != nil {
 		return fmt.Errorf("humanService layer delete function %w", err)
 	}
@@ -47,7 +47,7 @@ func (s *HumanService) Delete(token string, id string) error {
 	}
 }
 func (s *HumanService) Update(token string, id string, h model.Human) error {
-	_, role, err := jwtToken.DecodeToken(token)
+	_, role, err := jwttoken.DecodeToken(token)
 	if err != nil {
 		return fmt.Errorf("humanService layer update function %w", err)
 	}
@@ -60,7 +60,7 @@ func (s *HumanService) Update(token string, id string, h model.Human) error {
 	}
 }
 func (s *HumanService) Get(token string, name string) (*model.Human, error) {
-	_, role, err := jwtToken.DecodeToken(token)
+	_, role, err := jwttoken.DecodeToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("humanService layer create function %w", err)
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 type mongoConfig struct {
-	Uri string `env:"DB_HOST" envDefault:"mongodb://localhost:27017"`
+	URI string `env:"DB_HOST" envDefault:"mongodb://localhost:27017"`
 }
 
 func GetMongoURI() (string, error) {
@@ -16,5 +16,5 @@ func GetMongoURI() (string, error) {
 		log.WithField("error", err.Error()).Warn("error in parsing mongo env variable")
 		return "", fmt.Errorf("error in parsing mongo env variable %w", err)
 	}
-	return cfg.Uri, nil
+	return cfg.URI, nil
 }

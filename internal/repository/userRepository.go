@@ -21,12 +21,12 @@ type MongoUserRepository struct {
 	collection *mongo.Collection
 }
 
-func NewMongoUserRepository(c *mongo.Client) UserRepository {
+func NewMongoUserRepository(c *mongo.Client) *MongoUserRepository {
 	collection := c.Database("myDatabase").Collection("users")
 	return &MongoUserRepository{collection: collection}
 }
 func (m *MongoUserRepository) Create(ctx context.Context, user model.User) error {
-	user.Id = uuid.NewV4().String()
+	user.ID = uuid.NewV4().String()
 	user.Role = "user"
 	_, err := m.collection.InsertOne(ctx, user)
 	if err != nil {

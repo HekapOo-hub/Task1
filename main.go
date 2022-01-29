@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/handlers"
 	"github.com/HekapOo-hub/Task1/internal/repository"
@@ -20,12 +19,12 @@ func main() {
 	log.SetLevel(log.WarnLevel)
 	cfg, err := config.NewConfig()
 	if err != nil {
-		fmt.Println(err)
+		log.WithField("error", err).Warn("postgres config error")
 		return
 	}
 	pool, err := pgxpool.Connect(context.Background(), cfg.GetURL())
 	if err != nil {
-		fmt.Println(err)
+		log.WithField("error", err).Warn("postgres connect error")
 		return
 	}
 	defer pool.Close()

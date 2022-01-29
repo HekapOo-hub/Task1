@@ -40,7 +40,7 @@ func (u *UserService) UpdateUser(token string, oldLogin string, newUser model.Us
 	if err != nil {
 		return fmt.Errorf("service layer update function %w", err)
 	}
-	if login == oldLogin || role == "admin" {
+	if login == oldLogin || role == admin {
 		err = u.r.Update(context.Background(), login, newUser)
 		if err != nil {
 			return fmt.Errorf("service layer update function %w", err)
@@ -56,7 +56,7 @@ func (u *UserService) DeleteUser(token string, loginToDelete string) error {
 	if err != nil {
 		return fmt.Errorf("service layer update function %w", err)
 	}
-	if login == loginToDelete || role == "admin" {
+	if login == loginToDelete || role == admin {
 		err = u.r.Delete(context.Background(), loginToDelete)
 		if err != nil {
 			return fmt.Errorf("service layer delete function %w", err)
@@ -86,7 +86,7 @@ func (u *UserService) Get(token, loginToGet string) (*model.User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("service layer update function %w", err)
 	}
-	if login == loginToGet || role == "admin" {
+	if login == loginToGet || role == admin {
 		user, err := u.r.Get(context.Background(), loginToGet)
 		if err != nil {
 			return nil, fmt.Errorf("service layer get function %w", err)

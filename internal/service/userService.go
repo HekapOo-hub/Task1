@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/HekapOo-hub/Task1/internal/jwttoken"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -17,7 +16,7 @@ func NewUserService(r repository.UserRepository) *UserService {
 	return &UserService{r: r}
 }
 
-func (u *UserService) CreateUser(login string, password string) error {
+func (u *UserService) Create(login string, password string) error {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("error with hashing user's password %w", err)
@@ -30,16 +29,13 @@ func (u *UserService) CreateUser(login string, password string) error {
 	return nil
 }
 
-func (u *UserService) UpdateUser(token string, oldLogin string, newUser model.User) error {
+func (u *UserService) Update(login string, role string, oldLogin string, newUser model.User) error {
+
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("error with hashing user's password in update function %w", err)
 	}
 	newUser.Password = string(hashedPass)
-	login, role, err := jwttoken.DecodeToken(token)
-	if err != nil {
-		return fmt.Errorf("service layer update function %w", err)
-	}
 	if login == oldLogin || role == admin {
 		err = u.r.Update(context.Background(), login, newUser)
 		if err != nil {
@@ -51,13 +47,9 @@ func (u *UserService) UpdateUser(token string, oldLogin string, newUser model.Us
 	return nil
 }
 
-func (u *UserService) DeleteUser(token string, loginToDelete string) error {
-	login, role, err := jwttoken.DecodeToken(token)
-	if err != nil {
-		return fmt.Errorf("service layer update function %w", err)
-	}
+func (u *UserService) Delete(login string, role string, loginToDelete string) error {
 	if login == loginToDelete || role == admin {
-		err = u.r.Delete(context.Background(), loginToDelete)
+		err := u.r.Delete(context.Background(), loginToDelete)
 		if err != nil {
 			return fmt.Errorf("service layer delete function %w", err)
 		}
@@ -67,25 +59,8 @@ func (u *UserService) DeleteUser(token string, loginToDelete string) error {
 	return nil
 }
 
-func (u *UserService) Authentication(login string, password string) (string, error) {
-	user, err := u.r.Get(context.Background(), login)
-	if err != nil {
-		return "", fmt.Errorf("service layer authenticcation function %w", err)
-	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", fmt.Errorf("authentication comparing passwords error %w", err)
-	}
-	token, err := jwttoken.EncodeToken(user)
-	if err != nil {
-		return "", fmt.Errorf("service layer authentication %w", err)
-	}
-	return token, nil
-}
-func (u *UserService) Get(token, loginToGet string) (*model.User, error) {
-	login, role, err := jwttoken.DecodeToken(token)
-	if err != nil {
-		return nil, fmt.Errorf("service layer update function %w", err)
-	}
+func (u *UserService) Get(login string, role string, loginToGet string) (*model.User, error) {
+
 	if login == loginToGet || role == admin {
 		user, err := u.r.Get(context.Background(), loginToGet)
 		if err != nil {

@@ -33,3 +33,9 @@ func (u User) String() string {
 	}
 	return res
 }
+
+type Token struct {
+	Value     string
+	ExpiresAt int64
+	ID        string
+}

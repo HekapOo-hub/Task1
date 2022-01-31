@@ -29,7 +29,6 @@ func main() {
 	}
 	defer pool.Close()
 	repo := repository.NewRepository(pool)
-	h := handlers.NewHumanHandler(service.NewService(repo))
 
 	uri, err := config.GetMongoURI()
 	if err != nil {
@@ -42,18 +41,23 @@ func main() {
 	}
 	defer repository.MongoDisconnect(context.Background(), conn)
 	userRepo := repository.NewMongoUserRepository(conn)
-	h2 := handlers.NewUserHandler(service.NewUserService(userRepo))
+	h := handlers.NewHumanHandler(service.NewService(repo),
+		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
+	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
+		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 
 	e := echo.New()
 	e.POST("/human/create", h.Create)
-	e.GET("/human/get/:name", h.Get)
+	e.GET("/human/get", h.Get)
 	e.PATCH("/human/update", h.Update)
-	e.DELETE("/human/delete/:id", h.Delete)
-	e.GET("/user/get/:login", h2.Get)
+	e.DELETE("/human/delete", h.Delete)
+	e.GET("/user/get", h2.Get)
 	e.POST("/user/create", h2.Create)
 	e.PATCH("/user/update", h2.Update)
 	e.GET("/signIn", h2.Authenticate)
-	e.DELETE("/user/delete/:login", h2.Delete)
+	e.DELETE("/user/delete", h2.Delete)
+	e.GET("/refresh/:token", h2.Refresh)
+	e.DELETE("/logOut/:token", h2.LogOut)
 	err = e.Start(":1323")
 	if err != nil {
 		log.WithField("error", err).Warn("error with starting an echo server")

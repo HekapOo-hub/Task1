@@ -21,7 +21,7 @@ func MongoDisconnect(ctx context.Context, m *mongo.Client) {
 	}
 }
 func NewMongoRepository(c *mongo.Client) *MongoRepository {
-	collection := c.Database("myDatabase").Collection("users")
+	collection := c.Database("myDatabase").Collection("human")
 	return &MongoRepository{collection: collection}
 }
 func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {

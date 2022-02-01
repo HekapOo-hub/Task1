@@ -148,7 +148,7 @@ func (a *AuthService) Refresh(token string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
 	}
-	err = a.r.Create(context.Background(), *refreshToken)
+	err = a.Create(*refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication mongo create token error %w", err)
 	}

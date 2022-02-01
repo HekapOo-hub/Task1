@@ -7,6 +7,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/golang-jwt/jwt"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -42,7 +43,7 @@ func (a *AuthService) encodeToken(user *model.User, expiresAt int64) (*model.Tok
 	if err != nil {
 		return nil, fmt.Errorf("encode token error with signing %w", err)
 	}
-	return &model.Token{Value: val, ExpiresAt: expiresAt}, nil
+	return &model.Token{Value: val, ExpiresAt: expiresAt, Login: user.Login}, nil
 }
 func (a *AuthService) decodeToken(token string) (string, string, error) {
 	// Parse the token
@@ -74,26 +75,33 @@ func (a *AuthService) Create(token model.Token) error {
 	}
 	return nil
 }
-func (a *AuthService) Get(token string) (*time.Time, error) {
-	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+func (a *AuthService) Get(token string) (*model.Token, error) {
+	log.WithField("token", token).Warn("")
+	login, _, err := a.decodeToken(token)
 	if err != nil {
-		return nil, fmt.Errorf("error with hashing token in get %w", err)
+		return nil, fmt.Errorf("auth service get func decode token err %w", err)
 	}
-	token = string(hashedToken)
-	exAt, err := a.r.Get(context.Background(), token)
+	tokens, err := a.r.Get(context.Background(), login)
 	if err != nil {
 		return nil, fmt.Errorf("authentication layer get token error %w", err)
 	}
-	expireAt := time.Unix(exAt, 0)
-	return &expireAt, nil
+	for _, val := range tokens {
+		log.WithField("expire", val.ExpiresAt).Warn("")
+	}
+	for _, val := range tokens {
+		if err = bcrypt.CompareHashAndPassword([]byte(val.Value), []byte(token)); err == nil {
+			log.Warn("token found")
+			return &val, nil
+		}
+	}
+	return nil, fmt.Errorf("no such token in db")
 }
 func (a *AuthService) Delete(token string) error {
-	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+	res, err := a.Get(token)
 	if err != nil {
-		return fmt.Errorf("error with hashing token in delete %w", err)
+		return fmt.Errorf("error with getting token in delete func %w", err)
 	}
-	token = string(hashedToken)
-	err = a.r.Delete(context.Background(), token)
+	err = a.r.Delete(context.Background(), res.Value)
 	if err != nil {
 		return fmt.Errorf("authentication layer delete token error %w", err)
 	}
@@ -103,7 +111,7 @@ func (a *AuthService) Authenticate(user *model.User, password string) (string, s
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", fmt.Errorf("authentication comparing passwords error %w", err)
 	}
-	accessToken, err := a.encodeToken(user, time.Now().Add(time.Minute*1).Unix())
+	accessToken, err := a.encodeToken(user, time.Now().Add(time.Minute*15).Unix())
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode access token error %w", err)
 	}
@@ -111,6 +119,7 @@ func (a *AuthService) Authenticate(user *model.User, password string) (string, s
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
 	}
+
 	err = a.Create(*refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication mongo create token error %w", err)
@@ -122,11 +131,12 @@ func (a *AuthService) Refresh(token string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication decode token error in refresh %w", err)
 	}
-	_, err = a.Get(token)
+	tokenToDelete, err := a.Get(token)
+
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication mongo get  token error %w\n", err)
 	}
-	err = a.r.Delete(context.Background(), token)
+	err = a.r.Delete(context.Background(), tokenToDelete.Value)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication mongo delete token error %w", err)
 	}

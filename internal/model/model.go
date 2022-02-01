@@ -37,5 +37,5 @@ func (u User) String() string {
 type Token struct {
 	Value     string
 	ExpiresAt int64
-	ID        string
+	Login     string
 }

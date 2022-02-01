@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 )
 
 type HumanHandler struct {
@@ -19,12 +20,16 @@ func NewHumanHandler(hs *service.HumanService, as *service.AuthService) *HumanHa
 	return &HumanHandler{humanService: hs, authService: as}
 }
 func (h *HumanHandler) Create(c echo.Context) error {
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+
 	req := new(request.CreateHumanRequest)
 	if err := c.Bind(req); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in create")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
-	_, role, err := h.authService.Authorize(req.Token)
+	_, role, err := h.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in create human")
 		return fmt.Errorf("error in authorization in create human %w", err)
@@ -37,13 +42,16 @@ func (h *HumanHandler) Create(c echo.Context) error {
 	return c.String(http.StatusCreated, "human info was created")
 }
 func (h *HumanHandler) Update(c echo.Context) error {
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
 
 	req := new(request.UpdateHumanRequest)
 	if err := c.Bind(req); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in update")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
 	}
-	_, role, err := h.authService.Authorize(req.Token)
+	_, role, err := h.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in update human")
 		return fmt.Errorf("error in authorization in update human %w", err)
@@ -57,9 +65,11 @@ func (h *HumanHandler) Update(c echo.Context) error {
 	return c.String(http.StatusOK, "human info was updated")
 }
 func (h *HumanHandler) Get(c echo.Context) error {
-	token := c.QueryParam("token")
-	name := c.QueryParam("name")
-	_, role, err := h.authService.Authorize(token)
+	name := c.Param("name")
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+	_, role, err := h.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in get human")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -72,9 +82,12 @@ func (h *HumanHandler) Get(c echo.Context) error {
 	return c.String(http.StatusOK, human.String())
 }
 func (h *HumanHandler) Delete(c echo.Context) error {
-	token := c.QueryParam("token")
-	id := c.QueryParam("id")
-	_, role, err := h.authService.Authorize(token)
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+
+	id := c.Param("id")
+	_, role, err := h.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in delete human")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

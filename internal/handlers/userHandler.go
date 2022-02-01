@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 )
 
 type UserHandler struct {
@@ -37,12 +38,12 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 }
 
 func (u *UserHandler) Create(c echo.Context) error {
-	user := new(request.CreateUserRequest)
-	if err := c.Bind(user); err != nil {
-		log.WithField("error", err).Warn("error in binding structure with env variables in create user")
-		return echo.NewHTTPError(http.StatusBadRequest, err)
-	}
-	_, role, err := u.authService.Authorize(user.Token)
+	login := c.QueryParam("login")
+	password := c.QueryParam("password")
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+	_, role, err := u.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in create user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -50,7 +51,7 @@ func (u *UserHandler) Create(c echo.Context) error {
 	if role != "admin" {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	err = u.userService.Create(user.Login, user.Password)
+	err = u.userService.Create(login, password)
 	if err != nil {
 		log.WithField("error", err).Warn("error with creating user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -59,9 +60,11 @@ func (u *UserHandler) Create(c echo.Context) error {
 }
 
 func (u *UserHandler) Get(c echo.Context) error {
-	loginToGet := c.QueryParam("login")
-	token := c.QueryParam("token")
-	login, role, err := u.authService.Authorize(token)
+	loginToGet := c.Param("login")
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+	login, role, err := u.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in get user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -76,13 +79,15 @@ func (u *UserHandler) Get(c echo.Context) error {
 }
 
 func (u *UserHandler) Update(c echo.Context) error {
-
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
 	info := new(request.UpdateUserRequest)
 	if err := c.Bind(info); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in update user")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
-	login, role, err := u.authService.Authorize(info.Token)
+	login, role, err := u.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in create user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -96,9 +101,11 @@ func (u *UserHandler) Update(c echo.Context) error {
 }
 
 func (u *UserHandler) Delete(c echo.Context) error {
-	loginToDelete := c.QueryParam("login")
-	token := c.QueryParam("token")
-	login, role, err := u.authService.Authorize(token)
+	loginToDelete := c.Param("login")
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+	login, role, err := u.authService.Authorize(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("error in authorization in create user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -112,8 +119,11 @@ func (u *UserHandler) Delete(c echo.Context) error {
 }
 
 func (u *UserHandler) Refresh(c echo.Context) error {
-	token := c.Param("token")
-	accessToken, refreshToken, err := u.authService.Refresh(token)
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+
+	accessToken, refreshToken, err := u.authService.Refresh(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("refresh token error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -122,11 +132,14 @@ func (u *UserHandler) Refresh(c echo.Context) error {
 }
 
 func (u *UserHandler) LogOut(c echo.Context) error {
-	token := c.Param("token")
-	err := u.authService.Delete(token)
+	reqToken := c.Request().Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+
+	err := u.authService.Delete(reqToken)
 	if err != nil {
 		log.WithField("error", err).Warn("log out: delete token error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	return nil
+	return c.String(http.StatusOK, "user logged out")
 }

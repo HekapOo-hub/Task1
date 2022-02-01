@@ -8,7 +8,6 @@ services:
       - "1323:1323"
     environment:
       DB_HOST: "mongodb://mongo:27017"
-      CASE: "1"
   postgres:
     image: postgres:alpine
     environment:

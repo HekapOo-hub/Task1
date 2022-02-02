@@ -6,8 +6,8 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4/middleware"
 	uuid "github.com/satori/go.uuid"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -15,7 +15,7 @@ import (
 var accessKey = []byte("superSecretKey")
 var refreshKey = []byte("wgnbwglwrgnl")
 
-type tokenClaims struct {
+type TokenClaims struct {
 	Login string
 	Role  string
 	ID    string
@@ -24,6 +24,20 @@ type tokenClaims struct {
 
 type AuthService struct {
 	r repository.TokenRepository
+}
+
+func GetAccessTokenConfig() middleware.JWTConfig {
+	return middleware.JWTConfig{
+		Claims:     &TokenClaims{},
+		SigningKey: accessKey,
+	}
+}
+
+func GetRefreshTokenConfig() middleware.JWTConfig {
+	return middleware.JWTConfig{
+		Claims:     &TokenClaims{},
+		SigningKey: refreshKey,
+	}
 }
 
 func NewAuthService(r repository.TokenRepository) *AuthService {
@@ -36,7 +50,7 @@ func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style strin
 	} else if style == "refresh" {
 		key = refreshKey
 	}
-	claims := tokenClaims{
+	claims := TokenClaims{
 		user.Login,
 		user.Role,
 		uuid.NewV4().String(),
@@ -52,32 +66,7 @@ func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style strin
 	}
 	return &model.Token{Value: val, ExpiresAt: expiresAt, Login: user.Login}, nil
 }
-func (a *AuthService) decodeToken(token string, style string) (string, string, error) {
-	// Parse the token
-	var key []byte
-	if style == "access" {
-		key = accessKey
-	} else if style == "refresh" {
-		key = refreshKey
-	}
 
-	tokenType, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return key, nil
-	})
-	if err != nil {
-		return "", "", fmt.Errorf("token parsing error %w", err)
-	}
-	// Validate the token and return the custom claims
-	claims, ok := tokenType.Claims.(*tokenClaims)
-	if !ok {
-		return "", "", fmt.Errorf("token parsing error %w", err)
-	}
-	if !tokenType.Valid {
-		return "", "", fmt.Errorf("token expiration is over  %w", err)
-	}
-	log.WithFields(log.Fields{"uuid": claims.ID, "expire": claims.ExpiresAt}).Warn("in decode")
-	return claims.Login, claims.Role, nil
-}
 func (a *AuthService) Create(token model.Token) error {
 
 	err := a.r.Create(context.Background(), token)
@@ -120,13 +109,11 @@ func (a *AuthService) Authenticate(user *model.User, password string) (string, s
 	return accessToken.Value, refreshToken.Value, nil
 }
 
-func (a *AuthService) Refresh(token string) (string, string, error) {
-	login, role, err := a.decodeToken(token, "refresh")
-	if err != nil {
-		return "", "", fmt.Errorf("service layer  decode token error in refresh %w", err)
-	}
+func (a *AuthService) Refresh(claims *TokenClaims, token string) (string, string, error) {
 
-	err = a.r.Delete(context.Background(), token)
+	role := claims.Role
+	login := claims.Login
+	err := a.r.Delete(context.Background(), token)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  mongo delete token error %w", err)
 	}
@@ -143,11 +130,4 @@ func (a *AuthService) Refresh(token string) (string, string, error) {
 		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
 	}
 	return accessToken.Value, refreshToken.Value, nil
-}
-func (a *AuthService) Authorize(token string) (string, string, error) {
-	login, role, err := a.decodeToken(token, "access")
-	if err != nil {
-		return "", "", fmt.Errorf("error with decodeing token in authorization %w", err)
-	}
-	return login, role, nil
 }

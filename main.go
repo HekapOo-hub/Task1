@@ -8,6 +8,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -48,17 +49,21 @@ func main() {
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 
 	e := echo.New()
-	e.POST("/human/create", h.Create)
-	e.GET("/human/get/:name", h.Get)
-	e.PATCH("/human/update", h.Update)
-	e.DELETE("/human/delete/:id", h.Delete)
-	e.GET("/user/get/:login", h2.Get)
-	e.POST("/user/create", h2.Create)
-	e.PATCH("/user/update", h2.Update)
+	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
+	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
+	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(service.GetRefreshTokenConfig()))
+
+	accessGroup2.POST("create", h.Create)
+	accessGroup2.GET("get/:name", h.Get)
+	accessGroup2.PATCH("update", h.Update)
+	accessGroup2.DELETE("delete/:id", h.Delete)
+	accessGroup1.GET("get/:login", h2.Get)
+	accessGroup1.POST("create", h2.Create)
+	accessGroup1.PATCH("update", h2.Update)
 	e.GET("/signIn", h2.Authenticate)
-	e.DELETE("/user/delete/:login", h2.Delete)
-	e.GET("/refresh", h2.Refresh)
-	e.DELETE("/logOut", h2.LogOut)
+	accessGroup1.DELETE("delete/:login", h2.Delete)
+	refreshGroup.GET("update", h2.Refresh)
+	refreshGroup.DELETE("logOut", h2.LogOut)
 	err = e.Start(":1323")
 	if err != nil {
 		log.WithField("error", err).Warn("error with starting an echo server")

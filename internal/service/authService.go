@@ -12,12 +12,13 @@ import (
 	"time"
 )
 
-var key = []byte("superSecretKey")
+var accessKey = []byte("superSecretKey")
+var refreshKey = []byte("wgnbwglwrgnl")
 
 type tokenClaims struct {
 	Login string
 	Role  string
-	Uuid  string
+	ID    string
 	jwt.StandardClaims
 }
 
@@ -28,7 +29,13 @@ type AuthService struct {
 func NewAuthService(r repository.TokenRepository) *AuthService {
 	return &AuthService{r: r}
 }
-func (a *AuthService) encodeToken(user *model.User, expiresAt int64) (*model.Token, error) {
+func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style string) (*model.Token, error) {
+	var key []byte
+	if style == "access" {
+		key = accessKey
+	} else if style == "refresh" {
+		key = refreshKey
+	}
 	claims := tokenClaims{
 		user.Login,
 		user.Role,
@@ -45,8 +52,15 @@ func (a *AuthService) encodeToken(user *model.User, expiresAt int64) (*model.Tok
 	}
 	return &model.Token{Value: val, ExpiresAt: expiresAt, Login: user.Login}, nil
 }
-func (a *AuthService) decodeToken(token string) (string, string, error) {
+func (a *AuthService) decodeToken(token string, style string) (string, string, error) {
 	// Parse the token
+	var key []byte
+	if style == "access" {
+		key = accessKey
+	} else if style == "refresh" {
+		key = refreshKey
+	}
+
 	tokenType, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return key, nil
 	})
@@ -61,47 +75,26 @@ func (a *AuthService) decodeToken(token string) (string, string, error) {
 	if !tokenType.Valid {
 		return "", "", fmt.Errorf("token expiration is over  %w", err)
 	}
+	log.WithFields(log.Fields{"uuid": claims.ID, "expire": claims.ExpiresAt}).Warn("in decode")
 	return claims.Login, claims.Role, nil
 }
 func (a *AuthService) Create(token model.Token) error {
-	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token.Value), bcrypt.DefaultCost)
+
+	err := a.r.Create(context.Background(), token)
 	if err != nil {
-		return fmt.Errorf("error with hashing token in create %w", err)
-	}
-	token.Value = string(hashedToken)
-	err = a.r.Create(context.Background(), token)
-	if err != nil {
-		return fmt.Errorf("authentication layer create token error %w", err)
+		return fmt.Errorf("service layer create token error %w", err)
 	}
 	return nil
 }
 func (a *AuthService) Get(token string) (*model.Token, error) {
-	log.WithField("token", token).Warn("")
-	login, _, err := a.decodeToken(token)
+	tokenFromDB, err := a.r.Get(context.Background(), token)
 	if err != nil {
-		return nil, fmt.Errorf("auth service get func decode token err %w", err)
+		return nil, fmt.Errorf("service layer get token error %w", err)
 	}
-	tokens, err := a.r.Get(context.Background(), login)
-	if err != nil {
-		return nil, fmt.Errorf("authentication layer get token error %w", err)
-	}
-	for _, val := range tokens {
-		log.WithField("expire", val.ExpiresAt).Warn("")
-	}
-	for _, val := range tokens {
-		if err = bcrypt.CompareHashAndPassword([]byte(val.Value), []byte(token)); err == nil {
-			log.Warn("token found")
-			return &val, nil
-		}
-	}
-	return nil, fmt.Errorf("no such token in db")
+	return tokenFromDB, nil
 }
 func (a *AuthService) Delete(token string) error {
-	res, err := a.Get(token)
-	if err != nil {
-		return fmt.Errorf("error with getting token in delete func %w", err)
-	}
-	err = a.r.Delete(context.Background(), res.Value)
+	err := a.r.Delete(context.Background(), token)
 	if err != nil {
 		return fmt.Errorf("authentication layer delete token error %w", err)
 	}
@@ -111,51 +104,48 @@ func (a *AuthService) Authenticate(user *model.User, password string) (string, s
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", fmt.Errorf("authentication comparing passwords error %w", err)
 	}
-	accessToken, err := a.encodeToken(user, time.Now().Add(time.Minute*15).Unix())
+	accessToken, err := a.encodeToken(user, time.Now().Add(time.Minute*15).Unix(), "access")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode access token error %w", err)
 	}
-	refreshToken, err := a.encodeToken(user, time.Now().Add(time.Hour*24*7).Unix())
+	refreshToken, err := a.encodeToken(user, time.Now().Add(time.Hour*24*7).Unix(), "refresh")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
 	}
 
-	err = a.Create(*refreshToken)
+	err = a.r.Create(context.Background(), *refreshToken)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication mongo create token error %w", err)
+		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
 	}
 	return accessToken.Value, refreshToken.Value, nil
 }
-func (a *AuthService) Refresh(token string) (string, string, error) {
-	login, role, err := a.decodeToken(token)
-	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication decode token error in refresh %w", err)
-	}
-	tokenToDelete, err := a.Get(token)
 
+func (a *AuthService) Refresh(token string) (string, string, error) {
+	login, role, err := a.decodeToken(token, "refresh")
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication mongo get  token error %w\n", err)
+		return "", "", fmt.Errorf("service layer  decode token error in refresh %w", err)
 	}
-	err = a.r.Delete(context.Background(), tokenToDelete.Value)
+
+	err = a.r.Delete(context.Background(), token)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication mongo delete token error %w", err)
+		return "", "", fmt.Errorf("service layer  mongo delete token error %w", err)
 	}
-	accessToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Minute*15).Unix())
+	accessToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Minute*15).Unix(), "access")
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication encode access token error %w", err)
+		return "", "", fmt.Errorf("service layer  encode access token error %w", err)
 	}
-	refreshToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Hour*24*7).Unix())
+	refreshToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Hour*24*7).Unix(), "refresh")
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
+		return "", "", fmt.Errorf("service layer  encode refresh token error %w", err)
 	}
-	err = a.Create(*refreshToken)
+	err = a.r.Create(context.Background(), *refreshToken)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication mongo create token error %w", err)
+		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
 	}
 	return accessToken.Value, refreshToken.Value, nil
 }
 func (a *AuthService) Authorize(token string) (string, string, error) {
-	login, role, err := a.decodeToken(token)
+	login, role, err := a.decodeToken(token, "access")
 	if err != nil {
 		return "", "", fmt.Errorf("error with decodeing token in authorization %w", err)
 	}

@@ -51,9 +51,12 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, h model.Huma
 	return nil
 }
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, "delete from people where id=$1", id)
+	rowsAffected, err := r.db.Exec(ctx, "delete from people where id=$1", id)
 	if err != nil {
 		return fmt.Errorf("postgres delete error %w", err)
+	}
+	if rowsAffected.RowsAffected() == 0 {
+		return fmt.Errorf("no such human in db")
 	}
 	return nil
 }

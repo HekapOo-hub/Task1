@@ -47,9 +47,12 @@ func (m *MongoUserRepository) Get(ctx context.Context, login string) (*model.Use
 
 func (m *MongoUserRepository) Delete(ctx context.Context, login string) error {
 	filter := bson.D{primitive.E{Key: "login", Value: login}}
-	_, err := m.collection.DeleteOne(ctx, filter)
+	delRes, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("mongo delete user error %w", err)
+	}
+	if delRes.DeletedCount == 0 {
+		return fmt.Errorf("no such user in db")
 	}
 	return nil
 }

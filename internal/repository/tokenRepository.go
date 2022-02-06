@@ -11,21 +11,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// TokenRepository is a crud interface for working with db where token info stored
 type TokenRepository interface {
 	Create(ctx context.Context, token model.Token) error
 	Get(ctx context.Context, token string) (*model.Token, error)
 	Delete(ctx context.Context, token string) error
 }
 
+// MongoTokenRepository implements TokenRepository with mongoDB
 type MongoTokenRepository struct {
 	collection *mongo.Collection
 }
 
+// NewMongoTokenRepository returns new MongoTokenRepository
 func NewMongoTokenRepository(c *mongo.Client) *MongoTokenRepository {
 	collection := c.Database("myDatabase").Collection("tokens")
 	return &MongoTokenRepository{collection: collection}
 }
 
+// Create is used for creating token info in db
 func (m *MongoTokenRepository) Create(ctx context.Context, token model.Token) error {
 	hashedToken := fmt.Sprintf("%x", sha256.Sum256([]byte(token.Value)))
 	token.Value = hashedToken
@@ -36,6 +40,7 @@ func (m *MongoTokenRepository) Create(ctx context.Context, token model.Token) er
 	return nil
 }
 
+// Get is used for getting token info from db
 func (m *MongoTokenRepository) Get(ctx context.Context, token string) (*model.Token, error) {
 	var res model.Token
 	hashedToken := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
@@ -47,6 +52,7 @@ func (m *MongoTokenRepository) Get(ctx context.Context, token string) (*model.To
 	return &res, nil
 }
 
+// Delete is used for deleting token info from db
 func (m *MongoTokenRepository) Delete(ctx context.Context, token string) error {
 	hashedToken := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
 	log.WithField("hash", hashedToken).Warn("")

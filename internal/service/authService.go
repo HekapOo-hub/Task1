@@ -12,9 +12,14 @@ import (
 	"time"
 )
 
-var accessKey = []byte("superSecretKey")
-var refreshKey = []byte("wgnbwglwrgnl")
+const (
+	accessKey  = "superSecretKey"
+	refreshKey = "wgnbwglwrgnl"
+	accessTTL  = time.Minute * 15
+	refreshTTL = time.Hour * 24 * 7
+)
 
+// TokenClaims describes custom token claim
 type TokenClaims struct {
 	Login string
 	Role  string
@@ -22,10 +27,12 @@ type TokenClaims struct {
 	jwt.StandardClaims
 }
 
+// AuthService implements authentication and refresh token functional
 type AuthService struct {
 	r repository.TokenRepository
 }
 
+// GetAccessTokenConfig returns access jwt config for middleware authentication
 func GetAccessTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
 		Claims:     &TokenClaims{},
@@ -33,6 +40,7 @@ func GetAccessTokenConfig() middleware.JWTConfig {
 	}
 }
 
+// GetRefreshTokenConfig returns refresh jwt config for middleware authentication
 func GetRefreshTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
 		Claims:     &TokenClaims{},
@@ -40,15 +48,17 @@ func GetRefreshTokenConfig() middleware.JWTConfig {
 	}
 }
 
+// NewAuthService returns instance of AuthService
 func NewAuthService(r repository.TokenRepository) *AuthService {
 	return &AuthService{r: r}
 }
+
 func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style string) (*model.Token, error) {
 	var key []byte
 	if style == "access" {
-		key = accessKey
+		key = []byte(accessKey)
 	} else if style == "refresh" {
-		key = refreshKey
+		key = []byte(refreshKey)
 	}
 	claims := TokenClaims{
 		user.Login,
@@ -67,14 +77,16 @@ func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style strin
 	return &model.Token{Value: val, ExpiresAt: expiresAt, Login: user.Login}, nil
 }
 
+// Create is used for creating human info from db
 func (a *AuthService) Create(token model.Token) error {
-
 	err := a.r.Create(context.Background(), token)
 	if err != nil {
 		return fmt.Errorf("service layer create token error %w", err)
 	}
 	return nil
 }
+
+// Get is used for getting human info from db
 func (a *AuthService) Get(token string) (*model.Token, error) {
 	tokenFromDB, err := a.r.Get(context.Background(), token)
 	if err != nil {
@@ -82,6 +94,8 @@ func (a *AuthService) Get(token string) (*model.Token, error) {
 	}
 	return tokenFromDB, nil
 }
+
+// Delete is used for deleting human info from db
 func (a *AuthService) Delete(token string) error {
 	err := a.r.Delete(context.Background(), token)
 	if err != nil {
@@ -89,15 +103,17 @@ func (a *AuthService) Delete(token string) error {
 	}
 	return nil
 }
-func (a *AuthService) Authenticate(user *model.User, password string) (string, string, error) {
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+
+// Authenticate finds user login and password and returns appropriate tokens
+func (a *AuthService) Authenticate(user *model.User, password string) (accessValue, refreshValue string, err error) {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", fmt.Errorf("authentication comparing passwords error %w", err)
 	}
-	accessToken, err := a.encodeToken(user, time.Now().Add(time.Minute*15).Unix(), "access")
+	accessToken, err := a.encodeToken(user, time.Now().Add(accessTTL).Unix(), "access")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode access token error %w", err)
 	}
-	refreshToken, err := a.encodeToken(user, time.Now().Add(time.Hour*24*7).Unix(), "refresh")
+	refreshToken, err := a.encodeToken(user, time.Now().Add(refreshTTL).Unix(), "refresh")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
 	}
@@ -109,19 +125,19 @@ func (a *AuthService) Authenticate(user *model.User, password string) (string, s
 	return accessToken.Value, refreshToken.Value, nil
 }
 
-func (a *AuthService) Refresh(claims *TokenClaims, token string) (string, string, error) {
-
+// Refresh returns new access and refresh tokens instead of old refresh token
+func (a *AuthService) Refresh(claims *TokenClaims, token string) (accessValue, refreshValue string, err error) {
 	role := claims.Role
 	login := claims.Login
-	err := a.r.Delete(context.Background(), token)
+	err = a.r.Delete(context.Background(), token)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  mongo delete token error %w", err)
 	}
-	accessToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Minute*15).Unix(), "access")
+	accessToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(accessTTL).Unix(), "access")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  encode access token error %w", err)
 	}
-	refreshToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(time.Hour*24*7).Unix(), "refresh")
+	refreshToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(refreshTTL).Unix(), "refresh")
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  encode refresh token error %w", err)
 	}

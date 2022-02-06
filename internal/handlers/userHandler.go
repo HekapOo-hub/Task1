@@ -11,19 +11,22 @@ import (
 	"net/http"
 )
 
+const (
+	admin = "admin"
+)
+
+// UserHandler implements crud interface for working with db and is used to define echo server's handler functions
 type UserHandler struct {
 	userService *service.UserService
 	authService *service.AuthService
 }
 
-const (
-	admin = "admin"
-)
-
+// NewUserHandler creates new user handler
 func NewUserHandler(us *service.UserService, as *service.AuthService) *UserHandler {
 	return &UserHandler{userService: us, authService: as}
 }
 
+// Authenticate checks if user is existing in db and in positive case returns access and refresh tokens
 func (u *UserHandler) Authenticate(c echo.Context) error {
 	login := c.QueryParam("login")
 	password := c.QueryParam("password")
@@ -41,6 +44,7 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 	return c.String(http.StatusOK, fmt.Sprintf("access token: %s\nrefresh token: %s", accessToken, refreshToken))
 }
 
+// Create is used for creating user in db
 func (u *UserHandler) Create(c echo.Context) error {
 	login := c.QueryParam("login")
 	password := c.QueryParam("password")
@@ -58,6 +62,7 @@ func (u *UserHandler) Create(c echo.Context) error {
 	return c.String(http.StatusCreated, "user was created")
 }
 
+// Get is used for getting user info from db
 func (u *UserHandler) Get(c echo.Context) error {
 	loginToGet := c.Param("login")
 	user := c.Get("user").(*jwt.Token)
@@ -73,9 +78,9 @@ func (u *UserHandler) Get(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, res.String())
-
 }
 
+// Update is used for updating user info in db
 func (u *UserHandler) Update(c echo.Context) error {
 	info := new(request.UpdateUserRequest)
 	if err := c.Bind(info); err != nil {
@@ -99,6 +104,7 @@ func (u *UserHandler) Update(c echo.Context) error {
 	return c.String(http.StatusOK, "user was updated")
 }
 
+// Delete is used for deleting user from db
 func (u *UserHandler) Delete(c echo.Context) error {
 	loginToDelete := c.Param("login")
 	user := c.Get("user").(*jwt.Token)
@@ -117,6 +123,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 	return c.String(http.StatusOK, "user was deleted")
 }
 
+// Refresh returns new access and refresh token instead of old refresh token
 func (u *UserHandler) Refresh(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
@@ -128,6 +135,7 @@ func (u *UserHandler) Refresh(c echo.Context) error {
 	return c.String(http.StatusOK, fmt.Sprintf("access token: %s\nrefresh token: %s", accessToken, refreshToken))
 }
 
+// LogOut deletes refresh token from db
 func (u *UserHandler) LogOut(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 

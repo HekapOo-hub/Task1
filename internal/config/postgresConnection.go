@@ -5,7 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
-// urlExample := "postgres://username:password@localhost:5432/database_name"
+// Config contains info about postgres database connection
 type Config struct {
 	UserName string `env:"POSTGRES_USER" envDefault:"vitalijprokopenya"`
 	Host     string `env:"HOST" envDefault:"postgres"`
@@ -15,10 +15,13 @@ type Config struct {
 	URL      string `env:"URL" envDefault:"postgres://"`
 }
 
+// GetURL returns URL to connect to postgres database
 func (c *Config) GetURL() string {
 	res := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.UserName, c.Password, c.Host, c.Port, c.DBName)
 	return res
 }
+
+// NewConfig returns new config of postgresDB parsed from environment variables
 func NewConfig() (*Config, error) {
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {

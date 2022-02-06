@@ -6,6 +6,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/handlers"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/HekapOo-hub/Task1/internal/service"
+	"github.com/HekapOo-hub/Task1/internal/validation"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -43,12 +44,18 @@ func main() {
 	}
 	defer repository.MongoDisconnect(context.Background(), conn)
 	userRepo := repository.NewMongoUserRepository(conn)
-	h := handlers.NewHumanHandler(service.NewService(repo),
+	h := handlers.NewHumanHandler(service.NewHumanService(repo),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 
 	e := echo.New()
+	validator, err := validation.NewValidator()
+	if err != nil {
+		log.WithField("error", err).Warn("echo validator error %w", err)
+		return
+	}
+	e.Validator = validator
 	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
 	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
 	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(service.GetRefreshTokenConfig()))

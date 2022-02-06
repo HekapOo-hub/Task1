@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// UserRepository is a crud interface for working with db where user info stored
 type UserRepository interface {
 	Create(ctx context.Context, user model.User) error
 	Get(ctx context.Context, login string) (*model.User, error)
@@ -17,14 +18,18 @@ type UserRepository interface {
 	Update(ctx context.Context, login string, newUser model.User) error
 }
 
+// MongoUserRepository implement UserRepository interface
 type MongoUserRepository struct {
 	collection *mongo.Collection
 }
 
+// NewMongoUserRepository returns instance of MongoUserRepository
 func NewMongoUserRepository(c *mongo.Client) *MongoUserRepository {
 	collection := c.Database("myDatabase").Collection("users")
 	return &MongoUserRepository{collection: collection}
 }
+
+// Create is used for creating human info in db
 func (m *MongoUserRepository) Create(ctx context.Context, user model.User) error {
 	user.ID = uuid.NewV4().String()
 	user.Role = "user"
@@ -35,6 +40,7 @@ func (m *MongoUserRepository) Create(ctx context.Context, user model.User) error
 	return nil
 }
 
+// Get is used for getting user info from db
 func (m *MongoUserRepository) Get(ctx context.Context, login string) (*model.User, error) {
 	var res model.User
 	filter := bson.D{primitive.E{Key: "login", Value: login}}
@@ -45,6 +51,7 @@ func (m *MongoUserRepository) Get(ctx context.Context, login string) (*model.Use
 	return &res, nil
 }
 
+// Delete is used for deleting user info from db
 func (m *MongoUserRepository) Delete(ctx context.Context, login string) error {
 	filter := bson.D{primitive.E{Key: "login", Value: login}}
 	delRes, err := m.collection.DeleteOne(ctx, filter)
@@ -57,6 +64,7 @@ func (m *MongoUserRepository) Delete(ctx context.Context, login string) error {
 	return nil
 }
 
+// Update is used for updating user info in db
 func (m *MongoUserRepository) Update(ctx context.Context, login string, newUser model.User) error {
 	filter := bson.D{primitive.E{Key: "login", Value: login}}
 	update := bson.D{

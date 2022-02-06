@@ -1,3 +1,4 @@
+// Package handlers contains handlers for echo server
 package handlers
 
 import (
@@ -10,14 +11,18 @@ import (
 	"net/http"
 )
 
+// HumanHandler implements  crud interface with Human entity for echo server
 type HumanHandler struct {
 	humanService *service.HumanService
 	authService  *service.AuthService
 }
 
+// NewHumanHandler creates new human handler
 func NewHumanHandler(hs *service.HumanService, as *service.AuthService) *HumanHandler {
 	return &HumanHandler{humanService: hs, authService: as}
 }
+
+// Create is used for creating human info in db
 func (h *HumanHandler) Create(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
@@ -40,6 +45,8 @@ func (h *HumanHandler) Create(c echo.Context) error {
 	}
 	return c.String(http.StatusCreated, "human info was created")
 }
+
+// Update is used for updating human info from db by his ID
 func (h *HumanHandler) Update(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
@@ -54,7 +61,7 @@ func (h *HumanHandler) Update(c echo.Context) error {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
-	err := h.humanService.Update(req.Id, model.Human{Name: req.NewName,
+	err := h.humanService.Update(req.ID, model.Human{Name: req.NewName,
 		Male: req.NewMale, Age: req.NewAge})
 	if err != nil {
 		log.WithField("error", err).Warn()
@@ -62,6 +69,8 @@ func (h *HumanHandler) Update(c echo.Context) error {
 	}
 	return c.String(http.StatusOK, "human info was updated")
 }
+
+// Get is used for getting human info from db by his name
 func (h *HumanHandler) Get(c echo.Context) error {
 	name := c.Param("name")
 
@@ -72,6 +81,8 @@ func (h *HumanHandler) Get(c echo.Context) error {
 	}
 	return c.String(http.StatusOK, human.String())
 }
+
+// Delete is used for deleting human info from db by his ID
 func (h *HumanHandler) Delete(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)

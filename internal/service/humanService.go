@@ -1,3 +1,4 @@
+// Package service contains services which wrap repository and implement business logic
 package service
 
 import (
@@ -7,18 +8,17 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/repository"
 )
 
-const (
-	admin = "admin"
-	user  = "user"
-)
-
+// HumanService wraps human repository implementing business logic of app
 type HumanService struct {
 	r repository.Repository
 }
 
-func NewService(r repository.Repository) *HumanService {
+// NewHumanService returns instance of HumanService
+func NewHumanService(r repository.Repository) *HumanService {
 	return &HumanService{r: r}
 }
+
+// Create is used for creating human info from db
 func (s *HumanService) Create(h model.Human) error {
 	err := s.r.Create(context.Background(), h)
 	if err != nil {
@@ -26,6 +26,8 @@ func (s *HumanService) Create(h model.Human) error {
 	}
 	return nil
 }
+
+// Delete is used for deleting human info from db
 func (s *HumanService) Delete(id string) error {
 	err := s.r.Delete(context.Background(), id)
 	if err != nil {
@@ -33,6 +35,8 @@ func (s *HumanService) Delete(id string) error {
 	}
 	return nil
 }
+
+// Update is used for updating human info in db
 func (s *HumanService) Update(id string, h model.Human) error {
 	err := s.r.Update(context.Background(), id, h)
 	if err != nil {
@@ -40,6 +44,8 @@ func (s *HumanService) Update(id string, h model.Human) error {
 	}
 	return nil
 }
+
+// Get is used for getting human info from db
 func (s *HumanService) Get(name string) (*model.Human, error) {
 	h, err := s.r.Get(context.Background(), name)
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package config contains all configuration info for databases
 package config
 
 import (
@@ -10,6 +11,7 @@ type mongoConfig struct {
 	URI string `env:"DB_HOST" envDefault:"mongodb://localhost:27017"`
 }
 
+// GetMongoURI returns URI to connect to mongoDb
 func GetMongoURI() (string, error) {
 	cfg := mongoConfig{}
 	if err := env.Parse(&cfg); err != nil {

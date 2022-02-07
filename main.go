@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+
 	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/handlers"
 	"github.com/HekapOo-hub/Task1/internal/repository"
@@ -13,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
 )
 
 func main() {

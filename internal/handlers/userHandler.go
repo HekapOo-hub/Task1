@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/request"
 	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 const (

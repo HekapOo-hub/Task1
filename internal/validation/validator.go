@@ -3,12 +3,13 @@ package validation
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/go-playground/validator.v9"
 	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
-	"net/http"
 )
 
 // CustomValidator instance is used as echo server validator
@@ -29,9 +30,6 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func NewValidator() (*CustomValidator, error) {
 	translator := en.New()
 	uni := ut.New(translator, translator)
-
-	// this is usually known or extracted from http 'Accept-Language' header
-	// also see uni.FindTranslator(...)
 	trans, found := uni.GetTranslator("en")
 	if !found {
 		return nil, fmt.Errorf("translator not found")

@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4/middleware"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 const (

@@ -42,7 +42,7 @@ func (h *HumanHandler) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
 
-	err := h.humanService.Create(model.Human{Name: req.Name, Male: req.Male, Age: req.Age})
+	err := h.humanService.Create(c.Request().Context(), model.Human{Name: req.Name, Male: req.Male, Age: req.Age})
 	if err != nil {
 		log.WithField("error", err).Warn()
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -68,7 +68,7 @@ func (h *HumanHandler) Update(c echo.Context) error {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
-	err := h.humanService.Update(req.ID, model.Human{Name: req.NewName,
+	err := h.humanService.Update(c.Request().Context(), req.ID, model.Human{Name: req.NewName,
 		Male: req.NewMale, Age: req.NewAge})
 	if err != nil {
 		log.WithField("error", err).Warn()
@@ -85,7 +85,7 @@ func (h *HumanHandler) Get(c echo.Context) error {
 		log.WithField("error", err).Warn("validation get human error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	human, err := h.humanService.Get(name)
+	human, err := h.humanService.Get(c.Request().Context(), name)
 	if err != nil {
 		log.WithField("error", err).Warn()
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -108,7 +108,7 @@ func (h *HumanHandler) Delete(c echo.Context) error {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
-	err := h.humanService.Delete(id)
+	err := h.humanService.Delete(c.Request().Context(), id)
 	if err != nil {
 		log.WithField("error", err).Warn()
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

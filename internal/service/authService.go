@@ -3,21 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"time"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4/middleware"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	accessKey  = "superSecretKey"
-	refreshKey = "wgnbwglwrgnl"
-	accessTTL  = time.Minute * 15
-	refreshTTL = time.Hour * 24 * 7
 )
 
 // TokenClaims describes custom token claim
@@ -33,54 +26,46 @@ type AuthService struct {
 	r repository.TokenRepository
 }
 
-// GetAccessTokenConfig returns access jwt config for middleware authentication
-func GetAccessTokenConfig() middleware.JWTConfig {
-	return middleware.JWTConfig{
-		Claims:     &TokenClaims{},
-		SigningKey: []byte(accessKey),
-	}
-}
-
-// GetRefreshTokenConfig returns refresh jwt config for middleware authentication
-func GetRefreshTokenConfig() middleware.JWTConfig {
-	return middleware.JWTConfig{
-		Claims:     &TokenClaims{},
-		SigningKey: []byte(refreshKey),
-	}
-}
-
 // NewAuthService returns instance of AuthService
 func NewAuthService(r repository.TokenRepository) *AuthService {
 	return &AuthService{r: r}
 }
 
-func (a *AuthService) encodeToken(user *model.User, expiresAt int64, style string) (*model.Token, error) {
-	var key []byte
-	if style == "access" {
-		key = []byte(accessKey)
-	} else if style == "refresh" {
-		key = []byte(refreshKey)
+func (a *AuthService) getTokens(user *model.User) (*model.Token, *model.Token, error) {
+	claims1 := TokenClaims{
+		Login: user.Login,
+		Role:  user.Role,
+		ID:    uuid.NewV4().String(),
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(config.AccessTTL).Unix(),
+		},
 	}
-	claims := TokenClaims{
-		user.Login,
-		user.Role,
-		uuid.NewV4().String(),
-		jwt.StandardClaims{
-			ExpiresAt: expiresAt,
+	token1 := jwt.NewWithClaims(jwt.SigningMethodHS256, claims1)
+	accessValue, err := token1.SignedString([]byte(config.AccessKey))
+	if err != nil {
+		return nil, nil, fmt.Errorf("access token error with signing %w", err)
+	}
+	claims2 := TokenClaims{
+		Login: user.Login,
+		Role:  user.Role,
+		ID:    uuid.NewV4().String(),
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(config.RefreshTTL).Unix(),
 		},
 	}
 	// Sign token and return
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	val, err := token.SignedString(key)
+	token2 := jwt.NewWithClaims(jwt.SigningMethodHS256, claims2)
+	refreshValue, err := token2.SignedString([]byte(config.RefreshKey))
 	if err != nil {
-		return nil, fmt.Errorf("encode token error with signing %w", err)
+		return nil, nil, fmt.Errorf("refresh token error with signing %w", err)
 	}
-	return &model.Token{Value: val, ExpiresAt: expiresAt, Login: user.Login}, nil
+	return &model.Token{Value: accessValue, ExpiresAt: time.Now().Add(config.AccessTTL).Unix(), Login: user.Login},
+		&model.Token{Value: refreshValue, ExpiresAt: time.Now().Add(config.RefreshTTL).Unix()}, nil
 }
 
 // Create is used for creating human info from db
-func (a *AuthService) Create(token model.Token) error {
-	err := a.r.Create(context.Background(), token)
+func (a *AuthService) Create(ctx context.Context, token model.Token) error {
+	err := a.r.Create(ctx, token)
 	if err != nil {
 		return fmt.Errorf("service layer create token error %w", err)
 	}
@@ -88,8 +73,8 @@ func (a *AuthService) Create(token model.Token) error {
 }
 
 // Get is used for getting human info from db
-func (a *AuthService) Get(token string) (*model.Token, error) {
-	tokenFromDB, err := a.r.Get(context.Background(), token)
+func (a *AuthService) Get(ctx context.Context, token string) (*model.Token, error) {
+	tokenFromDB, err := a.r.Get(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("service layer get token error %w", err)
 	}
@@ -97,8 +82,8 @@ func (a *AuthService) Get(token string) (*model.Token, error) {
 }
 
 // Delete is used for deleting human info from db
-func (a *AuthService) Delete(token string) error {
-	err := a.r.Delete(context.Background(), token)
+func (a *AuthService) Delete(ctx context.Context, token string) error {
+	err := a.r.Delete(ctx, token)
 	if err != nil {
 		return fmt.Errorf("authentication layer delete token error %w", err)
 	}
@@ -106,20 +91,15 @@ func (a *AuthService) Delete(token string) error {
 }
 
 // Authenticate finds user login and password and returns appropriate tokens
-func (a *AuthService) Authenticate(user *model.User, password string) (accessValue, refreshValue string, err error) {
+func (a *AuthService) Authenticate(ctx context.Context, user *model.User, password string) (accessValue, refreshValue string, err error) {
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", fmt.Errorf("authentication comparing passwords error %w", err)
 	}
-	accessToken, err := a.encodeToken(user, time.Now().Add(accessTTL).Unix(), "access")
+	accessToken, refreshToken, err := a.getTokens(user)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication encode access token error %w", err)
+		return "", "", fmt.Errorf("service layer authentication get tokens error %w", err)
 	}
-	refreshToken, err := a.encodeToken(user, time.Now().Add(refreshTTL).Unix(), "refresh")
-	if err != nil {
-		return "", "", fmt.Errorf("service layer authentication encode refresh token error %w", err)
-	}
-
-	err = a.r.Create(context.Background(), *refreshToken)
+	err = a.r.Create(ctx, *refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
 	}
@@ -127,22 +107,18 @@ func (a *AuthService) Authenticate(user *model.User, password string) (accessVal
 }
 
 // Refresh returns new access and refresh tokens instead of old refresh token
-func (a *AuthService) Refresh(claims *TokenClaims, token string) (accessValue, refreshValue string, err error) {
+func (a *AuthService) Refresh(ctx context.Context, claims *TokenClaims, token string) (accessValue, refreshValue string, err error) {
 	role := claims.Role
 	login := claims.Login
-	err = a.r.Delete(context.Background(), token)
+	err = a.r.Delete(ctx, token)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  mongo delete token error %w", err)
 	}
-	accessToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(accessTTL).Unix(), "access")
+	accessToken, refreshToken, err := a.getTokens(&model.User{Role: role, Login: login})
 	if err != nil {
-		return "", "", fmt.Errorf("service layer  encode access token error %w", err)
+		return "", "", fmt.Errorf("service layer get tokens error %w", err)
 	}
-	refreshToken, err := a.encodeToken(&model.User{Role: role, Login: login}, time.Now().Add(refreshTTL).Unix(), "refresh")
-	if err != nil {
-		return "", "", fmt.Errorf("service layer  encode refresh token error %w", err)
-	}
-	err = a.r.Create(context.Background(), *refreshToken)
+	err = a.r.Create(ctx, *refreshToken)
 	if err != nil {
 		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
 	}

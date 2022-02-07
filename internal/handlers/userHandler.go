@@ -36,12 +36,12 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 		log.WithField("error", err).Warn("validation sign in error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	user, err := u.userService.Get(login)
+	user, err := u.userService.Get(c.Request().Context(), login)
 	if err != nil {
 		log.WithField("error", err).Warn("get user error in authenticate")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	accessToken, refreshToken, err := u.authService.Authenticate(user, password)
+	accessToken, refreshToken, err := u.authService.Authenticate(c.Request().Context(), user, password)
 	if err != nil {
 		log.WithField("error", err).Warn("error with token in authentication")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -67,7 +67,7 @@ func (u *UserHandler) Create(c echo.Context) error {
 	if role != admin {
 		return echo.NewHTTPError(http.StatusBadRequest, "access denied")
 	}
-	err := u.userService.Create(req.Login, req.Password)
+	err := u.userService.Create(c.Request().Context(), req.Login, req.Password)
 	if err != nil {
 		log.WithField("error", err).Warn("error with creating user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -90,7 +90,7 @@ func (u *UserHandler) Get(c echo.Context) error {
 	if login != loginToGet && role != admin {
 		return echo.NewHTTPError(http.StatusBadRequest, "access denied")
 	}
-	res, err := u.userService.Get(loginToGet)
+	res, err := u.userService.Get(c.Request().Context(), loginToGet)
 	if err != nil {
 		log.WithField("error", err).Warn("error in getting user from db")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -118,7 +118,7 @@ func (u *UserHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "access denied")
 	}
 
-	err := u.userService.Update(info.OldLogin, model.User{Login: info.NewLogin, Password: info.NewPassword})
+	err := u.userService.Update(c.Request().Context(), info.OldLogin, model.User{Login: info.NewLogin, Password: info.NewPassword})
 	if err != nil {
 		log.WithField("error", err).Warn("error in update user. layer:handler")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -142,7 +142,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 	if login != loginToDelete && role != admin {
 		return fmt.Errorf("access denied in delete")
 	}
-	err := u.userService.Delete(loginToDelete)
+	err := u.userService.Delete(c.Request().Context(), loginToDelete)
 	if err != nil {
 		log.WithField("error", err).Warn("error in delete handler layer")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -154,7 +154,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 func (u *UserHandler) Refresh(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
-	accessToken, refreshToken, err := u.authService.Refresh(claims, user.Raw)
+	accessToken, refreshToken, err := u.authService.Refresh(c.Request().Context(), claims, user.Raw)
 	if err != nil {
 		log.WithField("error", err).Warn("refresh token error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -166,7 +166,7 @@ func (u *UserHandler) Refresh(c echo.Context) error {
 func (u *UserHandler) LogOut(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 
-	err := u.authService.Delete(user.Raw)
+	err := u.authService.Delete(c.Request().Context(), user.Raw)
 	if err != nil {
 		log.WithField("error", err).Warn("log out: delete token error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

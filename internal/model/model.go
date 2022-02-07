@@ -1,7 +1,9 @@
 // Package model contains different structs which describe info stored in repository
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Human contains data which is stored in postgresRepository
 type Human struct {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -56,7 +55,6 @@ func (m *MongoTokenRepository) Get(ctx context.Context, token string) (*model.To
 // Delete is used for deleting token info from db
 func (m *MongoTokenRepository) Delete(ctx context.Context, token string) error {
 	hashedToken := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
-	log.WithField("hash", hashedToken).Warn("")
 	filter := bson.D{primitive.E{Key: "value", Value: hashedToken}}
 	delRes, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {

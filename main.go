@@ -57,9 +57,9 @@ func main() {
 		return
 	}
 	e.Validator = validator
-	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
-	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(service.GetAccessTokenConfig()))
-	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(service.GetRefreshTokenConfig()))
+	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(config.GetRefreshTokenConfig()))
 	accessGroup2.POST("create", h.Create)
 	accessGroup2.GET("get/:name", h.Get)
 	accessGroup2.PATCH("update", h.Update)

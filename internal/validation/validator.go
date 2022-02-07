@@ -1,3 +1,4 @@
+// Package validation contain CustomValidator for echo server
 package validation
 
 import (
@@ -10,10 +11,12 @@ import (
 	"net/http"
 )
 
+// CustomValidator instance is used as echo server validator
 type CustomValidator struct {
 	validator *validator.Validate
 }
 
+// Validate checks structure's fields for correspondence to its tags
 func (cv *CustomValidator) Validate(i interface{}) error {
 	if err := cv.validator.Struct(i); err != nil {
 		// Optionally, you could return the error to give each route more control over the status code
@@ -22,6 +25,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
+// NewValidator returns new instance of CustomValidator
 func NewValidator() (*CustomValidator, error) {
 	translator := en.New()
 	uni := ut.New(translator, translator)
@@ -31,11 +35,8 @@ func NewValidator() (*CustomValidator, error) {
 	trans, found := uni.GetTranslator("en")
 	if !found {
 		return nil, fmt.Errorf("translator not found")
-
 	}
-
 	v := validator.New()
-
 	if err := en_translations.RegisterDefaultTranslations(v, trans); err != nil {
 		return nil, fmt.Errorf("en_translation error %w", err)
 	}

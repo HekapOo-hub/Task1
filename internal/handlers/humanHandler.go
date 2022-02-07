@@ -27,11 +27,14 @@ func (h *HumanHandler) Create(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
-
 	req := new(request.CreateHumanRequest)
 	if err := c.Bind(req); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in create")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+	}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation create human error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if role != admin {
 		log.Warn("access denied")
@@ -51,11 +54,14 @@ func (h *HumanHandler) Update(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
-
 	req := new(request.UpdateHumanRequest)
 	if err := c.Bind(req); err != nil {
 		log.WithField("error", err).Warn("error in binding structure with env variables in update")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+	}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation update human error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if role != admin {
 		log.Warn("access denied")
@@ -73,7 +79,11 @@ func (h *HumanHandler) Update(c echo.Context) error {
 // Get is used for getting human info from db by his name
 func (h *HumanHandler) Get(c echo.Context) error {
 	name := c.Param("name")
-
+	req := request.GetHumanRequest{Name: name}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation get human error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	human, err := h.humanService.Get(name)
 	if err != nil {
 		log.WithField("error", err).Warn()
@@ -87,8 +97,12 @@ func (h *HumanHandler) Delete(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
-
 	id := c.Param("id")
+	req := request.DeleteHumanRequest{ID: id}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation delete human error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	if role != admin {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")

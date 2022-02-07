@@ -36,7 +36,7 @@ type AuthService struct {
 func GetAccessTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
 		Claims:     &TokenClaims{},
-		SigningKey: accessKey,
+		SigningKey: []byte(accessKey),
 	}
 }
 
@@ -44,7 +44,7 @@ func GetAccessTokenConfig() middleware.JWTConfig {
 func GetRefreshTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
 		Claims:     &TokenClaims{},
-		SigningKey: refreshKey,
+		SigningKey: []byte(refreshKey),
 	}
 }
 

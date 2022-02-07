@@ -30,6 +30,11 @@ func NewUserHandler(us *service.UserService, as *service.AuthService) *UserHandl
 func (u *UserHandler) Authenticate(c echo.Context) error {
 	login := c.QueryParam("login")
 	password := c.QueryParam("password")
+	req := request.SignInRequest{Login: login, Password: password}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation sign in error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	user, err := u.userService.Get(login)
 	if err != nil {
 		log.WithField("error", err).Warn("get user error in authenticate")
@@ -46,15 +51,22 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 
 // Create is used for creating user in db
 func (u *UserHandler) Create(c echo.Context) error {
-	login := c.QueryParam("login")
-	password := c.QueryParam("password")
+	req := new(request.CreateUserRequest)
+	if err := c.Bind(req); err != nil {
+		log.WithField("error", err).Warn("error in binding structure with env variables in create user")
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+	}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation create user error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
 	if role != admin {
 		return echo.NewHTTPError(http.StatusBadRequest, "access denied")
 	}
-	err := u.userService.Create(login, password)
+	err := u.userService.Create(req.Login, req.Password)
 	if err != nil {
 		log.WithField("error", err).Warn("error with creating user")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -65,6 +77,11 @@ func (u *UserHandler) Create(c echo.Context) error {
 // Get is used for getting user info from db
 func (u *UserHandler) Get(c echo.Context) error {
 	loginToGet := c.Param("login")
+	req := request.GetUserRequest{Login: loginToGet}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation get user error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
@@ -87,6 +104,10 @@ func (u *UserHandler) Update(c echo.Context) error {
 		log.WithField("error", err).Warn("error in binding structure with env variables in update user")
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
+	if err := c.Validate(info); err != nil {
+		log.WithField("error", err).Warn("validation update user error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role
@@ -107,6 +128,11 @@ func (u *UserHandler) Update(c echo.Context) error {
 // Delete is used for deleting user from db
 func (u *UserHandler) Delete(c echo.Context) error {
 	loginToDelete := c.Param("login")
+	req := request.DeleteUserRequest{Login: loginToDelete}
+	if err := c.Validate(req); err != nil {
+		log.WithField("error", err).Warn("validation delete user error")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*service.TokenClaims)
 	role := claims.Role

@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/caarlos0/env/v6 v6.9.1
 	github.com/go-playground/locales v0.14.0
+	github.com/go-playground/universal-translator v0.18.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/labstack/echo/v4 v4.6.3
@@ -16,7 +17,6 @@ require (
 )
 
 require (
-	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect

@@ -6,7 +6,6 @@ import (
 
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/jackc/pgx/v4/pgxpool"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Repository is a crud interface for working with db where people info stored
@@ -29,7 +28,6 @@ func NewRepository(p *pgxpool.Pool) *PostgresRepository {
 
 // Create is used for creating human info in db
 func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
-	h.ID = uuid.NewV1().String()
 	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
 	_, err := r.db.Exec(ctx, query, h.ID, h.Name, h.Male, h.Age)
 	if err != nil {
@@ -61,7 +59,7 @@ func (r *PostgresRepository) Update(ctx context.Context, name string, h model.Hu
 
 // Delete is used for deleting human info from db
 func (r *PostgresRepository) Delete(ctx context.Context, name string) error {
-	rowsAffected, err := r.db.Exec(ctx, "delete from people where id=$1", name)
+	rowsAffected, err := r.db.Exec(ctx, "delete from people where name=$1", name)
 	if err != nil {
 		return fmt.Errorf("postgres delete error %w", err)
 	}

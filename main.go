@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/go-redis/redis"
 	"os"
 
 	"github.com/HekapOo-hub/Task1/internal/config"
@@ -44,8 +45,19 @@ func main() {
 		return
 	}
 	defer repository.MongoDisconnect(context.Background(), conn)
+	redisCfg, err := config.NewRedisConfig()
+	if err != nil {
+		log.WithField("error", err).Warn("redis get config error")
+	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisCfg.Addr,
+		Password: redisCfg.Password,
+		DB:       redisCfg.DB,
+	})
+	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(redisClient)
 	userRepo := repository.NewMongoUserRepository(conn)
-	h := handlers.NewHumanHandler(service.NewHumanService(repo),
+	h := handlers.NewHumanHandler(service.NewHumanService(repo, redisCacheHumanRepository),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
@@ -63,7 +75,7 @@ func main() {
 	accessGroup2.POST("create", h.Create)
 	accessGroup2.GET("get/:name", h.Get)
 	accessGroup2.PATCH("update", h.Update)
-	accessGroup2.DELETE("delete/:id", h.Delete)
+	accessGroup2.DELETE("delete/:name", h.Delete)
 	accessGroup1.GET("get/:login", h2.Get)
 	accessGroup1.POST("create", h2.Create)
 	accessGroup1.PATCH("update", h2.Update)

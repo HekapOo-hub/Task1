@@ -13,14 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TokenClaims describes custom token claim
-type TokenClaims struct {
-	Login string
-	Role  string
-	ID    string
-	jwt.StandardClaims
-}
-
 // AuthService implements authentication and refresh token functional
 type AuthService struct {
 	r repository.TokenRepository
@@ -32,7 +24,7 @@ func NewAuthService(r repository.TokenRepository) *AuthService {
 }
 
 func (a *AuthService) getTokens(user *model.User) (*model.Token, *model.Token, error) {
-	claims1 := TokenClaims{
+	claims1 := config.TokenClaims{
 		Login: user.Login,
 		Role:  user.Role,
 		ID:    uuid.NewV4().String(),
@@ -45,7 +37,7 @@ func (a *AuthService) getTokens(user *model.User) (*model.Token, *model.Token, e
 	if err != nil {
 		return nil, nil, fmt.Errorf("access token error with signing %w", err)
 	}
-	claims2 := TokenClaims{
+	claims2 := config.TokenClaims{
 		Login: user.Login,
 		Role:  user.Role,
 		ID:    uuid.NewV4().String(),
@@ -107,7 +99,7 @@ func (a *AuthService) Authenticate(ctx context.Context, user *model.User, passwo
 }
 
 // Refresh returns new access and refresh tokens instead of old refresh token
-func (a *AuthService) Refresh(ctx context.Context, claims *TokenClaims, token string) (accessValue, refreshValue string, err error) {
+func (a *AuthService) Refresh(ctx context.Context, claims *config.TokenClaims, token string) (accessValue, refreshValue string, err error) {
 	role := claims.Role
 	login := claims.Login
 	err = a.r.Delete(ctx, token)

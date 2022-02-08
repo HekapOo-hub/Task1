@@ -14,9 +14,8 @@ RUN apk --no-cache add ca-certificates
 RUN apk add --no-cache libc6-compat
 WORKDIR /root/
 COPY --from=builder /app/Task1 .
-RUN ls -la
-EXPOSE 1323
 
+EXPOSE 1323
 
 CMD ["./Task1"]
 

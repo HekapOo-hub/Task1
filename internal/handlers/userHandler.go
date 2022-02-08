@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"net/http"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
@@ -62,7 +63,7 @@ func (u *UserHandler) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	if role != admin {
 		return echo.NewHTTPError(http.StatusBadRequest, "access denied")
@@ -84,7 +85,7 @@ func (u *UserHandler) Get(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	login := claims.Login
 	if login != loginToGet && role != admin {
@@ -110,7 +111,7 @@ func (u *UserHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	login := claims.Login
 
@@ -135,7 +136,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	login := claims.Login
 
@@ -153,7 +154,7 @@ func (u *UserHandler) Delete(c echo.Context) error {
 // Refresh returns new access and refresh token instead of old refresh token
 func (u *UserHandler) Refresh(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	accessToken, refreshToken, err := u.authService.Refresh(c.Request().Context(), claims, user.Raw)
 	if err != nil {
 		log.WithField("error", err).Warn("refresh token error")

@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"net/http"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
@@ -26,7 +27,7 @@ func NewHumanHandler(hs *service.HumanService, as *service.AuthService) *HumanHa
 // Create is used for creating human info in db
 func (h *HumanHandler) Create(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	req := new(request.CreateHumanRequest)
 	if err := c.Bind(req); err != nil {
@@ -53,7 +54,7 @@ func (h *HumanHandler) Create(c echo.Context) error {
 // Update is used for updating human info from db by his ID
 func (h *HumanHandler) Update(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
 	req := new(request.UpdateHumanRequest)
 	if err := c.Bind(req); err != nil {
@@ -68,7 +69,7 @@ func (h *HumanHandler) Update(c echo.Context) error {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
-	err := h.humanService.Update(c.Request().Context(), req.ID, model.Human{Name: req.NewName,
+	err := h.humanService.Update(c.Request().Context(), req.OldName, model.Human{Name: req.NewName,
 		Male: req.NewMale, Age: req.NewAge})
 	if err != nil {
 		log.WithField("error", err).Warn()
@@ -96,10 +97,10 @@ func (h *HumanHandler) Get(c echo.Context) error {
 // Delete is used for deleting human info from db by his ID
 func (h *HumanHandler) Delete(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*service.TokenClaims)
+	claims := user.Claims.(*config.TokenClaims)
 	role := claims.Role
-	id := c.Param("id")
-	req := request.DeleteHumanRequest{ID: id}
+	name := c.Param("name")
+	req := request.DeleteHumanRequest{Name: name}
 	if err := c.Validate(req); err != nil {
 		log.WithField("error", err).Warn("validation delete human error")
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -108,7 +109,7 @@ func (h *HumanHandler) Delete(c echo.Context) error {
 		log.Warn("access denied")
 		return echo.NewHTTPError(http.StatusNotAcceptable, "access denied")
 	}
-	err := h.humanService.Delete(c.Request().Context(), id)
+	err := h.humanService.Delete(c.Request().Context(), req.Name)
 	if err != nil {
 		log.WithField("error", err).Warn()
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

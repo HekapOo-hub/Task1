@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/HekapOo-hub/Task1/internal/service"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4/middleware"
 	"time"
 )
@@ -13,10 +13,18 @@ const (
 	RefreshTTL = time.Hour * 24 * 7
 )
 
+// TokenClaims describes custom token claim
+type TokenClaims struct {
+	Login string
+	Role  string
+	ID    string
+	jwt.StandardClaims
+}
+
 // GetAccessTokenConfig returns access jwt config for middleware authentication
 func GetAccessTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
-		Claims:     &service.TokenClaims{},
+		Claims:     &TokenClaims{},
 		SigningKey: []byte(AccessKey),
 	}
 }
@@ -24,7 +32,7 @@ func GetAccessTokenConfig() middleware.JWTConfig {
 // GetRefreshTokenConfig returns refresh jwt config for middleware authentication
 func GetRefreshTokenConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
-		Claims:     &service.TokenClaims{},
+		Claims:     &TokenClaims{},
 		SigningKey: []byte(RefreshKey),
 	}
 }

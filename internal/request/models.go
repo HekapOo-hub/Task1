@@ -10,7 +10,7 @@ type CreateHumanRequest struct {
 
 // UpdateHumanRequest is a struct to which I bind json data from update human request
 type UpdateHumanRequest struct {
-	ID      string `json:"id" validate:"required"`
+	OldName string `json:"oldName" validate:"required"`
 	NewName string `json:"name" validate:"required,max=40"`
 	NewMale bool   `json:"male" validate:"required"`
 	NewAge  int    `json:"age" validate:"required"`
@@ -53,5 +53,5 @@ type GetHumanRequest struct {
 
 // DeleteHumanRequest is used for validating delete human data in request
 type DeleteHumanRequest struct {
-	ID string `validate:"required"`
+	Name string `validate:"required"`
 }

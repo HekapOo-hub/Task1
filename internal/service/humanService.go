@@ -29,8 +29,8 @@ func (s *HumanService) Create(ctx context.Context, h model.Human) error {
 }
 
 // Delete is used for deleting human info from db
-func (s *HumanService) Delete(ctx context.Context, id string) error {
-	err := s.r.Delete(ctx, id)
+func (s *HumanService) Delete(ctx context.Context, name string) error {
+	err := s.r.Delete(ctx, name)
 	if err != nil {
 		return fmt.Errorf("human service %w", err)
 	}
@@ -38,8 +38,8 @@ func (s *HumanService) Delete(ctx context.Context, id string) error {
 }
 
 // Update is used for updating human info in db
-func (s *HumanService) Update(ctx context.Context, id string, h model.Human) error {
-	err := s.r.Update(ctx, id, h)
+func (s *HumanService) Update(ctx context.Context, name string, h model.Human) error {
+	err := s.r.Update(ctx, name, h)
 	if err != nil {
 		return fmt.Errorf("human service %w", err)
 	}

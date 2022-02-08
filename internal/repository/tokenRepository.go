@@ -23,7 +23,7 @@ type MongoTokenRepository struct {
 	collection *mongo.Collection
 }
 
-// NewMongoTokenRepository returns new MongoTokenRepository
+// NewMongoTokenRepository returns new instance of MongoTokenRepository
 func NewMongoTokenRepository(c *mongo.Client) *MongoTokenRepository {
 	collection := c.Database("myDatabase").Collection("tokens")
 	return &MongoTokenRepository{collection: collection}

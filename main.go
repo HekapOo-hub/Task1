@@ -20,7 +20,7 @@ import (
 func main() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.WarnLevel)
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewPostgresConfig()
 	if err != nil {
 		log.WithField("error", err).Warn("postgres config error")
 		return
@@ -49,7 +49,7 @@ func main() {
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
-
+	h3 := handlers.FileHandler{}
 	e := echo.New()
 	validator, err := validation.NewValidator()
 	if err != nil {
@@ -68,6 +68,8 @@ func main() {
 	accessGroup1.POST("create", h2.Create)
 	accessGroup1.PATCH("update", h2.Update)
 	e.GET("/signIn", h2.Authenticate)
+	e.GET("/file/download/:fileName", h3.Download)
+	e.GET("/file/upload/:fileName", h3.Upload)
 	accessGroup1.DELETE("delete/:login", h2.Delete)
 	refreshGroup.GET("update", h2.Refresh)
 	refreshGroup.DELETE("logOut", h2.LogOut)

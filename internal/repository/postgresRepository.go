@@ -13,8 +13,8 @@ import (
 type Repository interface {
 	Create(ctx context.Context, human model.Human) error
 	Get(ctx context.Context, name string) (*model.Human, error)
-	Update(ctx context.Context, id string, human model.Human) error
-	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, name string, human model.Human) error
+	Delete(ctx context.Context, name string) error
 }
 
 // PostgresRepository implements crud interface with human entity
@@ -50,9 +50,9 @@ func (r *PostgresRepository) Get(ctx context.Context, name string) (*model.Human
 }
 
 // Update is used for updating human info in db
-func (r *PostgresRepository) Update(ctx context.Context, id string, h model.Human) error {
-	query := "update people set  name=$1,male=$2,age=$3 where id=$4"
-	_, err := r.db.Exec(ctx, query, h.Name, h.Male, h.Age, id)
+func (r *PostgresRepository) Update(ctx context.Context, name string, h model.Human) error {
+	query := "update people set  name=$1,male=$2,age=$3 where name=$4"
+	_, err := r.db.Exec(ctx, query, h.Name, h.Male, h.Age, name)
 	if err != nil {
 		return fmt.Errorf("postgres update error %w", err)
 	}
@@ -60,8 +60,8 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, h model.Huma
 }
 
 // Delete is used for deleting human info from db
-func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	rowsAffected, err := r.db.Exec(ctx, "delete from people where id=$1", id)
+func (r *PostgresRepository) Delete(ctx context.Context, name string) error {
+	rowsAffected, err := r.db.Exec(ctx, "delete from people where id=$1", name)
 	if err != nil {
 		return fmt.Errorf("postgres delete error %w", err)
 	}

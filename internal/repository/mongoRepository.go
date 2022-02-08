@@ -53,8 +53,8 @@ func (m *MongoRepository) Get(ctx context.Context, name string) (*model.Human, e
 }
 
 // Update is used for updating human info in db
-func (m *MongoRepository) Update(ctx context.Context, id string, h model.Human) error {
-	filter := bson.D{primitive.E{Key: "id", Value: id}}
+func (m *MongoRepository) Update(ctx context.Context, name string, h model.Human) error {
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "name", Value: h.Name}, primitive.E{Key: "male", Value: h.Male},
@@ -69,8 +69,8 @@ func (m *MongoRepository) Update(ctx context.Context, id string, h model.Human) 
 }
 
 // Delete is used for deleting human info from db
-func (m *MongoRepository) Delete(ctx context.Context, id string) error {
-	filter := bson.D{primitive.E{Key: "id", Value: id}}
+func (m *MongoRepository) Delete(ctx context.Context, name string) error {
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	_, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("mongo delete human error %w", err)

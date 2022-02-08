@@ -9,7 +9,7 @@ import (
 )
 
 type mongoConfig struct {
-	URI string `env:"DB_HOST" envDefault:"mongodb://localhost:27017"`
+	URI string `env:"MONGO_URI" envDefault:"mongodb://localhost:27017"`
 }
 
 // GetMongoURI returns URI to connect to mongoDb

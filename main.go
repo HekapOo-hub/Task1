@@ -56,6 +56,7 @@ func main() {
 		DB:       redisCfg.DB,
 	})
 	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(redisClient)
+	defer redisCacheHumanRepository.Cancel()
 	userRepo := repository.NewMongoUserRepository(conn)
 	h := handlers.NewHumanHandler(service.NewHumanService(repo, redisCacheHumanRepository),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))

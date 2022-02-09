@@ -166,7 +166,6 @@ func (u *UserHandler) Refresh(c echo.Context) error {
 // LogOut deletes refresh token from db
 func (u *UserHandler) LogOut(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
-
 	err := u.authService.Delete(c.Request().Context(), user.Raw)
 	if err != nil {
 		log.WithField("error", err).Warn("log out: delete token error")

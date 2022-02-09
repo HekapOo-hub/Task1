@@ -3,11 +3,10 @@ package config
 import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
-	"time"
 )
 
 const (
-	HumanCacheTTL = time.Minute * 15
+	RedisStream = "people"
 )
 
 // RedisConfig is used for connecting with redis db

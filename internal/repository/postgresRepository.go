@@ -31,7 +31,7 @@ func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
 	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
 	_, err := r.db.Exec(ctx, query, h.ID, h.Name, h.Male, h.Age)
 	if err != nil {
-		return fmt.Errorf("postgres  creation error %w", err)
+		return fmt.Errorf("postgres create error %w", err)
 	}
 	return nil
 }

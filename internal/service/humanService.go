@@ -4,11 +4,9 @@ package service
 import (
 	"context"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
+	uuid "github.com/satori/go.uuid"
 )
 
 // HumanService wraps human repository implementing business logic of app
@@ -55,9 +53,9 @@ func (s *HumanService) Update(ctx context.Context, name string, h model.Human) e
 	if err != nil {
 		return fmt.Errorf("human service %w", err)
 	}
-	err = s.cache.Update(name, h)
+	err = s.cache.Delete(name)
 	if err != nil {
-		return fmt.Errorf("human service %w", err)
+		return fmt.Errorf("human service update func %w", err)
 	}
 	return nil
 }
@@ -66,13 +64,15 @@ func (s *HumanService) Update(ctx context.Context, name string, h model.Human) e
 func (s *HumanService) Get(ctx context.Context, name string) (*model.Human, error) {
 	res, err := s.cache.Get(name)
 	if err == nil {
-
 		return res, nil
 	}
-	log.WithField("error", err).Warn("redis")
 	h, err := s.r.Get(ctx, name)
 	if err != nil {
 		return nil, fmt.Errorf("human service %w", err)
+	}
+	err = s.cache.Create(*h)
+	if err != nil {
+		return nil, fmt.Errorf("human service get func %w", err)
 	}
 	return h, nil
 }

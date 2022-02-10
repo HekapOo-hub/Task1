@@ -2,9 +2,9 @@
 package handlers
 
 import (
-	"github.com/HekapOo-hub/Task1/internal/config"
 	"net/http"
 
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/request"
 	"github.com/HekapOo-hub/Task1/internal/service"
@@ -31,11 +31,11 @@ func (h *HumanHandler) Create(c echo.Context) error {
 	role := claims.Role
 	req := new(request.CreateHumanRequest)
 	if err := c.Bind(req); err != nil {
-		log.WithField("error", err).Warn("error in binding structure with env variables in create")
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+		log.Warnf("error in binding structure with env variables in create: %v", err)
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation create human error")
+		log.Warnf("validation create human error^ %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if role != admin {
@@ -45,7 +45,7 @@ func (h *HumanHandler) Create(c echo.Context) error {
 
 	err := h.humanService.Create(c.Request().Context(), model.Human{Name: req.Name, Male: req.Male, Age: req.Age})
 	if err != nil {
-		log.WithField("error", err).Warn()
+		log.Warnf("error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusCreated, "human info was created")
@@ -58,11 +58,11 @@ func (h *HumanHandler) Update(c echo.Context) error {
 	role := claims.Role
 	req := new(request.UpdateHumanRequest)
 	if err := c.Bind(req); err != nil {
-		log.WithField("error", err).Warn("error in binding structure with env variables in update")
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err)
+		log.Warnf("error in binding structure with env variables in update: %v", err)
+		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation update human error")
+		log.Warnf("validation update human error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if role != admin {
@@ -83,12 +83,12 @@ func (h *HumanHandler) Get(c echo.Context) error {
 	name := c.Param("name")
 	req := request.GetHumanRequest{Name: name}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation get human error")
+		log.Warnf("validation get human error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	human, err := h.humanService.Get(c.Request().Context(), name)
 	if err != nil {
-		log.WithField("error", err).Warn()
+		log.Warnf("error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, human.String())
@@ -102,7 +102,7 @@ func (h *HumanHandler) Delete(c echo.Context) error {
 	name := c.Param("name")
 	req := request.DeleteHumanRequest{Name: name}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation delete human error")
+		log.Warnf("validation delete human error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	if role != admin {
@@ -111,7 +111,7 @@ func (h *HumanHandler) Delete(c echo.Context) error {
 	}
 	err := h.humanService.Delete(c.Request().Context(), req.Name)
 	if err != nil {
-		log.WithField("error", err).Warn()
+		log.Warnf("error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, "human's info was deleted")

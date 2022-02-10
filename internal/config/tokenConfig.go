@@ -1,15 +1,20 @@
 package config
 
 import (
+	"time"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4/middleware"
-	"time"
 )
 
 const (
-	AccessKey  = "superSecretKey"
+	// AccessKey is used for signing access token
+	AccessKey = "superSecretKey"
+	// RefreshKey is used for signing refresh token
 	RefreshKey = "wgnbwglwrgnl"
-	AccessTTL  = time.Minute * 15
+	// AccessTTL is access token's time to live
+	AccessTTL = time.Minute * 15
+	// RefreshTTL is refresh token's time to live
 	RefreshTTL = time.Hour * 24 * 7
 )
 

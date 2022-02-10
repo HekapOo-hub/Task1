@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/HekapOo-hub/Task1/internal/config"
 	"net/http"
 
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/request"
 	"github.com/HekapOo-hub/Task1/internal/service"
@@ -34,20 +34,19 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 	password := c.QueryParam("password")
 	req := request.SignInRequest{Login: login, Password: password}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation sign in error")
+		log.Warnf("validation sign in error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user, err := u.userService.Get(c.Request().Context(), login)
 	if err != nil {
-		log.WithField("error", err).Warn("get user error in authenticate")
+		log.Warnf("get user error in authenticate: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	accessToken, refreshToken, err := u.authService.Authenticate(c.Request().Context(), user, password)
 	if err != nil {
-		log.WithField("error", err).Warn("error with token in authentication")
+		log.Warnf("error with token in authentication: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-
 	return c.String(http.StatusOK, fmt.Sprintf("access token: %s\nrefresh token: %s", accessToken, refreshToken))
 }
 
@@ -55,11 +54,11 @@ func (u *UserHandler) Authenticate(c echo.Context) error {
 func (u *UserHandler) Create(c echo.Context) error {
 	req := new(request.CreateUserRequest)
 	if err := c.Bind(req); err != nil {
-		log.WithField("error", err).Warn("error in binding structure with env variables in create user")
+		log.Warnf("error in binding structure with env variables in create user: %v", err)
 		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 	}
 	if err := c.Validate(req); err != nil {
-		log.WithField("error", err).Warn("validation create user error")
+		log.Warnf("validation create user error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	user := c.Get("user").(*jwt.Token)
@@ -70,7 +69,7 @@ func (u *UserHandler) Create(c echo.Context) error {
 	}
 	err := u.userService.Create(c.Request().Context(), req.Login, req.Password)
 	if err != nil {
-		log.WithField("error", err).Warn("error with creating user")
+		log.Warnf("error with creating user: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusCreated, "user was created")

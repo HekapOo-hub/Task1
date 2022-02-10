@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/go-redis/redis"
 	"os"
 
 	"github.com/HekapOo-hub/Task1/internal/config"
@@ -10,6 +9,7 @@ import (
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/HekapOo-hub/Task1/internal/validation"
+	"github.com/go-redis/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -23,12 +23,12 @@ func main() {
 	log.SetLevel(log.WarnLevel)
 	cfg, err := config.NewPostgresConfig()
 	if err != nil {
-		log.WithField("error", err).Warn("postgres config error")
+		log.Warnf("postgres config error: %v", err)
 		return
 	}
 	pool, err := pgxpool.Connect(context.Background(), cfg.GetURL())
 	if err != nil {
-		log.WithField("error", err).Warn("postgres connect error")
+		log.Warnf("postgres connect error: %v", err)
 		return
 	}
 	defer pool.Close()
@@ -37,17 +37,18 @@ func main() {
 
 	uri, err := config.GetMongoURI()
 	if err != nil {
+		log.Warnf("error: %v", err)
 		return
 	}
 	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "uri": uri}).Warn("error with connecting to mongodb")
+		log.WithField("uri", uri).Warnf("error with connecting to mongodb: %v", err)
 		return
 	}
 	defer repository.MongoDisconnect(context.Background(), conn)
 	redisCfg, err := config.NewRedisConfig()
 	if err != nil {
-		log.WithField("error", err).Warn("redis get config error")
+		log.Warnf("redis get config error: %v", err)
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
@@ -55,8 +56,10 @@ func main() {
 		Password: redisCfg.Password,
 		DB:       redisCfg.DB,
 	})
-	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(redisClient)
-	defer redisCacheHumanRepository.Cancel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(ctx, redisClient)
+	defer cancel()
 	userRepo := repository.NewMongoUserRepository(conn)
 	h := handlers.NewHumanHandler(service.NewHumanService(repo, redisCacheHumanRepository),
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
@@ -66,7 +69,7 @@ func main() {
 	e := echo.New()
 	validator, err := validation.NewValidator()
 	if err != nil {
-		log.WithField("error", err).Warn("echo validator error %w", err)
+		log.Warnf("echo validator error %v", err)
 		return
 	}
 	e.Validator = validator
@@ -88,7 +91,7 @@ func main() {
 	refreshGroup.DELETE("logOut", h2.LogOut)
 	err = e.Start(":1323")
 	if err != nil {
-		log.WithField("error", err).Warn("error with starting an echo server")
+		log.Warnf("error with starting an echo server: %v", err)
 		return
 	}
 }

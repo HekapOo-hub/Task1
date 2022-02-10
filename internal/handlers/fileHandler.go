@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/HekapOo-hub/Task1/internal/service"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 // FileHandler implements download and upload file for echo server
@@ -17,7 +18,7 @@ func (f *FileHandler) Download(c echo.Context) error {
 	fileName := c.Param("fileName")
 	err := f.fileService.Download(c.Request().Context(), fileName)
 	if err != nil {
-		log.WithField("error", err).Warn("file downloading error")
+		log.Warnf("file downloading error: %v", err)
 		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
 	}
 	return c.File(fileName)
@@ -28,7 +29,7 @@ func (f *FileHandler) Upload(c echo.Context) error {
 	fileName := c.Param("fileName")
 	err := f.fileService.Upload(c.Request().Context(), fileName)
 	if err != nil {
-		log.WithField("error", err).Warn("file uploading error")
+		log.Warnf("file uploading error: %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, "file was uploaded!")

@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/HekapOo-hub/Task1/internal/config"
 	"time"
 
+	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/golang-jwt/jwt"
@@ -23,7 +23,7 @@ func NewAuthService(r repository.TokenRepository) *AuthService {
 	return &AuthService{r: r}
 }
 
-func (a *AuthService) getTokens(user *model.User) (*model.Token, *model.Token, error) {
+func (a *AuthService) getTokens(user *model.User) (accessToken, refreshToken *model.Token, err error) {
 	claims1 := config.TokenClaims{
 		Login: user.Login,
 		Role:  user.Role,

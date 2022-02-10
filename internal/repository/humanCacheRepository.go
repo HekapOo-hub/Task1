@@ -24,7 +24,6 @@ type RedisHumanCacheRepository struct {
 	client *redis.Client
 	cache  map[string]model.Human
 	lastID string
-	ctx    context.Context
 	mu     sync.RWMutex
 }
 
@@ -34,10 +33,9 @@ func NewRedisHumanCacheRepository(ctx context.Context, c *redis.Client) *RedisHu
 		client: c,
 		cache:  make(map[string]model.Human),
 		lastID: "$",
-		ctx:    ctx,
 		mu:     sync.RWMutex{},
 	}
-	go r.listen()
+	go r.listen(ctx)
 	return r
 }
 
@@ -80,10 +78,10 @@ func (r *RedisHumanCacheRepository) Delete(name string) error {
 	return nil
 }
 
-func (r *RedisHumanCacheRepository) listen() {
+func (r *RedisHumanCacheRepository) listen(ctx context.Context) {
 	for {
 		select {
-		case <-r.ctx.Done():
+		case <-ctx.Done():
 			return
 		default:
 			res, err := r.client.XRead(&redis.XReadArgs{

@@ -4,7 +4,7 @@ package request
 // CreateHumanRequest is a struct to which I bind json data from create human request
 type CreateHumanRequest struct {
 	Name string `json:"name" validate:"required,max=40"`
-	Male bool   `json:"male" validate:"required"`
+	Male bool   `json:"male"`
 	Age  int    `json:"age" validate:"required"`
 }
 
@@ -12,7 +12,7 @@ type CreateHumanRequest struct {
 type UpdateHumanRequest struct {
 	OldName string `json:"oldName" validate:"required"`
 	NewName string `json:"name" validate:"required,max=40"`
-	NewMale bool   `json:"male" validate:"required"`
+	NewMale bool   `json:"male"`
 	NewAge  int    `json:"age" validate:"required"`
 }
 
@@ -43,7 +43,7 @@ type GetUserRequest struct {
 
 // DeleteUserRequest is used for validating delete user data in request
 type DeleteUserRequest struct {
-	Login string `validate:"required"`
+	Login string `json:"login" validate:"required"`
 }
 
 // GetHumanRequest is used for validating get human data in request

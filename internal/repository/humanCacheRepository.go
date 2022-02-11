@@ -99,7 +99,6 @@ func (r *RedisHumanCacheRepository) listen(ctx context.Context) {
 			}
 			r.lastID = res[0].Messages[0].ID
 			humanMap := res[0].Messages[0].Values
-			log.WithField("map", humanMap).Warn("")
 			var male bool
 			maleStr := humanMap["male"]
 			switch maleStr {

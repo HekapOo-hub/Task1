@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"os"
 
+	_ "github.com/HekapOo-hub/Task1/docs"
 	"github.com/HekapOo-hub/Task1/internal/config"
 	"github.com/HekapOo-hub/Task1/internal/handlers"
 	"github.com/HekapOo-hub/Task1/internal/repository"
@@ -18,6 +20,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// @title Human CRUD API
+// @version 1.0
+// @description Human CRUD API with authorization and cache
+// @licence.name Apache 2.0
+// @host localhost:1323
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.WarnLevel)
@@ -67,6 +79,7 @@ func main() {
 		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
 	h3 := handlers.FileHandler{}
 	e := echo.New()
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	validator, err := validation.NewValidator()
 	if err != nil {
 		log.Warnf("echo validator error %v", err)

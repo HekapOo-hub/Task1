@@ -25,6 +25,15 @@ func NewHumanHandler(hs *service.HumanService, as *service.AuthService) *HumanHa
 }
 
 // Create is used for creating human info in db
+// @Summary create human
+// @Security ApiKeyAuth
+// @Tags human
+// @Description to create new human
+// @Accept json
+// @Param request body request.CreateHumanRequest true "create human info"
+// @Success 201 body string
+// @Failure 400 body echo.NewHTTPError
+// @Router /human/create [post]
 func (h *HumanHandler) Create(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*config.TokenClaims)
@@ -52,6 +61,15 @@ func (h *HumanHandler) Create(c echo.Context) error {
 }
 
 // Update is used for updating human info from db by his ID
+// @Summary update human
+// @Security ApiKeyAuth
+// @Tags human
+// @Description to update human
+// @Accept json
+// @Param request body request.UpdateHumanRequest true "update human info"
+// @Success 200 body string
+// @Failure 400 body echo.NewHTTPError
+// @Router /human/update [patch]
 func (h *HumanHandler) Update(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*config.TokenClaims)
@@ -79,6 +97,14 @@ func (h *HumanHandler) Update(c echo.Context) error {
 }
 
 // Get is used for getting human info from db by his name
+// @Summary get human info
+// @Security ApiKeyAuth
+// @Tags human
+// @Description to get human info
+// @Param name path string true "get human info"
+// @Success 200 body string
+// @Failure 400 body echo.NewHTTPError
+// @Router /human/get/{name} [get]
 func (h *HumanHandler) Get(c echo.Context) error {
 	name := c.Param("name")
 	req := request.GetHumanRequest{Name: name}
@@ -95,6 +121,14 @@ func (h *HumanHandler) Get(c echo.Context) error {
 }
 
 // Delete is used for deleting human info from db by his ID
+// @Summary delete human info
+// @Security ApiKeyAuth
+// @Tags human
+// @Description to delete human
+// @Param name path string true "delete human info"
+// @Success 200 body string
+// @Failure 400 body echo.NewHTTPError
+// @Router /human/delete/{name} [delete]
 func (h *HumanHandler) Delete(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*config.TokenClaims)

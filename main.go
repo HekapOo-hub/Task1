@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	echoSwagger "github.com/swaggo/echo-swagger"
 	"os"
 
 	_ "github.com/HekapOo-hub/Task1/docs"
@@ -16,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

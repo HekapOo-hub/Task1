@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -33,7 +32,6 @@ func NewMongoRepository(c *mongo.Client) *MongoRepository {
 
 // Create is used for creating human info in db
 func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {
-	h.ID = uuid.NewV4().String()
 	_, err := m.collection.InsertOne(ctx, h)
 	if err != nil {
 		return fmt.Errorf("mongo creation human error %w", err)

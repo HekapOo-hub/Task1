@@ -32,7 +32,7 @@ func NewRedisHumanCacheRepository(ctx context.Context, c *redis.Client) *RedisHu
 	r := &RedisHumanCacheRepository{
 		client: c,
 		cache:  make(map[string]model.Human),
-		lastID: "$",
+		lastID: "0-0",
 		mu:     sync.RWMutex{},
 	}
 	go r.listen(ctx)

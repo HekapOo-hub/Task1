@@ -2,12 +2,13 @@ package dockertest
 
 import (
 	"context"
+	"testing"
+
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/jackc/pgx/v4/pgxpool"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var postgresDB *pgxpool.Pool
@@ -75,4 +76,10 @@ func TestHumanDelete(t *testing.T) {
 	require.NoError(t, err)
 	err = repo.Delete(ctx, "delete")
 	require.NoError(t, err)
+	var deleted model.Human
+	row := postgresDB.QueryRow(ctx, `select * from people where name=$1`, "delete")
+	err = row.Scan(&deleted.ID, &deleted.Name, &deleted.Male, &deleted.Age)
+	row = postgresDB.QueryRow(ctx, `select * from people where name=$1`, "not existing")
+	expectedError := row.Scan(&deleted.ID, &deleted.Name, &deleted.Male, &deleted.Age)
+	require.Equal(t, expectedError, err)
 }

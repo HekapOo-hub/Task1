@@ -3,27 +3,33 @@ package dockertest
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"testing"
+	"time"
+
+	"github.com/go-redis/redis"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
-	"os/exec"
-	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
 	postgresPool, postgresResource := startPostgres()
 	mongoPool, mongoResource := startMongo()
+	redisPool, redisResource := startRedis()
 	//Run tests
 	code := m.Run()
 
+	if err := redisPool.Purge(redisResource); err != nil {
+		log.Errorf("Could not purge resource: %s", err)
+	}
 	// You can't defer this because os.Exit doesn't care for defer
 	if err := postgresPool.Purge(postgresResource); err != nil {
-		log.Fatalf("Could not purge resource: %s", err)
+		log.Errorf("Could not purge resource: %s", err)
 	}
 
 	// disconnect mongodb client
@@ -41,13 +47,13 @@ func startPostgres() (*dockertest.Pool, *dockertest.Resource) {
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Errorf("Could not connect to docker: %s", err)
 	}
 
 	// pulls an image, creates a container based on it and runs it
 	postgresResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
-		Tag:        "11",
+		Tag:        "latest",
 		Env: []string{
 			"POSTGRES_PASSWORD=1234",
 			"POSTGRES_USER=test",
@@ -59,7 +65,7 @@ func startPostgres() (*dockertest.Pool, *dockertest.Resource) {
 		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
 	})
 	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
+		log.Errorf("Could not start resource: %s", err)
 	}
 
 	hostAndPort := postgresResource.GetHostPort("5432/tcp")
@@ -67,10 +73,10 @@ func startPostgres() (*dockertest.Pool, *dockertest.Resource) {
 	flywayURL := fmt.Sprintf("jdbc:postgresql://%s/testDB", hostAndPort)
 	log.Info("Connecting to database on url: ", databaseUrl)
 	log.Info("flyway url: ", flywayURL)
-	/*	err = postgresResource.Expire(120) // Tell docker to hard kill the container in 120 seconds
-		if err != nil {
-			log.Fatalf("Could not start resource: %s", err)
-		}*/
+	err = postgresResource.Expire(120) // Tell docker to hard kill the container in 120 seconds
+	if err != nil {
+		log.Errorf("Could not start resource: %s", err)
+	}
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	pool.MaxWait = 60 * time.Second
 	if err = pool.Retry(func() error {
@@ -80,7 +86,7 @@ func startPostgres() (*dockertest.Pool, *dockertest.Resource) {
 		}
 		return postgresDB.Ping(context.Background())
 	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		log.Errorf("Could not connect to docker: %s", err)
 	}
 
 	cmd := exec.Command("flyway", "-user=test", "-password=1234",
@@ -104,7 +110,7 @@ func startMongo() (*dockertest.Pool, *dockertest.Resource) {
 	// pull mongodb docker image for version 5.0
 	mongoResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "mongo",
-		Tag:        "5.0",
+		Tag:        "latest",
 		Env: []string{
 			// username and password for mongodb superuser
 			"MONGO_INITDB_ROOT_USERNAME=root",
@@ -143,4 +149,27 @@ func startMongo() (*dockertest.Pool, *dockertest.Resource) {
 		log.Fatalf("Could not start resource: %s", err)
 	}
 	return pool, mongoResource
+}
+
+func startRedis() (*dockertest.Pool, *dockertest.Resource) {
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		log.Errorf("Could not connect to docker: %s", err)
+	}
+
+	resource, err := pool.Run("redis", "latest", nil)
+	if err != nil {
+		log.Errorf("Could not start resource: %s", err)
+	}
+
+	if err = pool.Retry(func() error {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
+		})
+
+		return redisClient.Ping().Err()
+	}); err != nil {
+		log.Errorf("Could not connect to docker: %s", err)
+	}
+	return pool, resource
 }

@@ -45,7 +45,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	repo := repository.NewRepository(pool)
+	repo := repository.NewHumanRepository(pool)
 
 	uri, err := config.GetMongoURI()
 	if err != nil {

@@ -1,11 +1,10 @@
-package dockertest
+package repository
 
 import (
 	"context"
 	"testing"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,7 +16,7 @@ var dbClient *mongo.Client
 func TestUserCreate(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := repository.NewMongoUserRepository(dbClient)
+	repo := NewMongoUserRepository(dbClient)
 	expected := model.User{Login: "create", Password: "1234"}
 	err := repo.Create(ctx, expected)
 	require.NoError(t, err)
@@ -32,7 +31,7 @@ func TestUserCreate(t *testing.T) {
 func TestUserGet(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := repository.NewMongoUserRepository(dbClient)
+	repo := NewMongoUserRepository(dbClient)
 	expected := model.User{Login: "get", Password: "1234"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)
@@ -46,7 +45,7 @@ func TestUserGet(t *testing.T) {
 func TestUserUpdate(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := repository.NewMongoUserRepository(dbClient)
+	repo := NewMongoUserRepository(dbClient)
 	expected := model.User{Login: "update", Password: "12345"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)
@@ -65,7 +64,7 @@ func TestUserUpdate(t *testing.T) {
 func TestUserDelete(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := repository.NewMongoUserRepository(dbClient)
+	repo := NewMongoUserRepository(dbClient)
 	expected := model.User{Login: "delete", Password: "12345"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)

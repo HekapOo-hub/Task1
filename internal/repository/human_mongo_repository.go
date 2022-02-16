@@ -12,8 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// MongoRepository is a struct for working with mongoDB
-type MongoRepository struct {
+// HumanMongoRepository is a struct for working with mongoDB
+type HumanMongoRepository struct {
 	collection *mongo.Collection
 }
 
@@ -24,14 +24,14 @@ func MongoDisconnect(ctx context.Context, m *mongo.Client) {
 	}
 }
 
-// NewMongoRepository creates new mongo repository with human collection in it
-func NewMongoRepository(c *mongo.Client) *MongoRepository {
+// NewHumanMongoRepository creates new mongo repository with human collection in it
+func NewHumanMongoRepository(c *mongo.Client) *HumanMongoRepository {
 	collection := c.Database("myDatabase").Collection("human")
-	return &MongoRepository{collection: collection}
+	return &HumanMongoRepository{collection: collection}
 }
 
 // Create is used for creating human info in db
-func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {
+func (m *HumanMongoRepository) Create(ctx context.Context, h model.Human) error {
 	_, err := m.collection.InsertOne(ctx, h)
 	if err != nil {
 		return fmt.Errorf("mongo creation human error %w", err)
@@ -40,7 +40,7 @@ func (m *MongoRepository) Create(ctx context.Context, h model.Human) error {
 }
 
 // Get is used for getting human info in db
-func (m *MongoRepository) Get(ctx context.Context, name string) (*model.Human, error) {
+func (m *HumanMongoRepository) Get(ctx context.Context, name string) (*model.Human, error) {
 	var res model.Human
 	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	err := m.collection.FindOne(ctx, filter).Decode(&res)
@@ -51,7 +51,7 @@ func (m *MongoRepository) Get(ctx context.Context, name string) (*model.Human, e
 }
 
 // Update is used for updating human info in db
-func (m *MongoRepository) Update(ctx context.Context, name string, h model.Human) error {
+func (m *HumanMongoRepository) Update(ctx context.Context, name string, h model.Human) error {
 	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -67,7 +67,7 @@ func (m *MongoRepository) Update(ctx context.Context, name string, h model.Human
 }
 
 // Delete is used for deleting human info from db
-func (m *MongoRepository) Delete(ctx context.Context, name string) error {
+func (m *HumanMongoRepository) Delete(ctx context.Context, name string) error {
 	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	_, err := m.collection.DeleteOne(ctx, filter)
 	if err != nil {

@@ -1,4 +1,4 @@
-package dockertest
+package repository
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/go-redis/redis"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
@@ -17,7 +16,7 @@ var redisClient *redis.Client
 func TestHumanCache(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	repo := repository.NewRedisHumanCacheRepository(ctx, redisClient)
+	repo := NewRedisHumanCacheRepository(ctx, redisClient)
 	expected := model.Human{ID: uuid.NewV4().String(), Name: "create",
 		Male: false, Age: 123}
 	err := repo.Create(expected)

@@ -1,11 +1,10 @@
-package dockertest
+package repository
 
 import (
 	"context"
 	"testing"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/jackc/pgx/v4/pgxpool"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
@@ -15,7 +14,7 @@ var postgresDB *pgxpool.Pool
 
 func TestHumanCreate(t *testing.T) {
 	ctx := context.Background()
-	repo := repository.NewRepository(postgresDB)
+	repo := NewHumanRepository(postgresDB)
 	expected := model.Human{Name: "create", Age: 11, Male: false}
 	expected.ID = uuid.NewV1().String()
 	err := repo.Create(ctx, expected)
@@ -33,7 +32,7 @@ func TestHumanCreate(t *testing.T) {
 
 func TestHumanGet(t *testing.T) {
 	ctx := context.Background()
-	repo := repository.NewRepository(postgresDB)
+	repo := NewHumanRepository(postgresDB)
 	expected := model.Human{ID: uuid.NewV4().String(), Name: "get", Age: 123, Male: true}
 	_, err := postgresDB.Exec(ctx, "insert into people (id,name,male,age) values ($1,$2,$3,$4)",
 		expected.ID, expected.Name, expected.Male, expected.Age)
@@ -49,7 +48,7 @@ func TestHumanGet(t *testing.T) {
 
 func TestHumanUpdate(t *testing.T) {
 	ctx := context.Background()
-	repo := repository.NewRepository(postgresDB)
+	repo := NewHumanRepository(postgresDB)
 	expected := model.Human{ID: uuid.NewV4().String(), Name: "updated", Male: true, Age: 228}
 	_, err := postgresDB.Exec(ctx, "insert into people (id,name,male,age) values ($1,$2,$3,$4)",
 		expected.ID, "update", false, 2)
@@ -70,7 +69,7 @@ func TestHumanUpdate(t *testing.T) {
 
 func TestHumanDelete(t *testing.T) {
 	ctx := context.Background()
-	repo := repository.NewRepository(postgresDB)
+	repo := NewHumanRepository(postgresDB)
 	_, err := postgresDB.Exec(ctx, "insert into people (id,name,male,age) values ($1,$2,$3,$4)",
 		uuid.NewV4().String(), "delete", false, 2)
 	require.NoError(t, err)

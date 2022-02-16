@@ -1,11 +1,10 @@
-package dockertest
+package repository
 
 import (
 	"context"
 	"testing"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	"github.com/HekapOo-hub/Task1/internal/repository"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,7 +14,7 @@ import (
 func TestHumanMongoCreate(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("human")
-	repo := repository.NewMongoRepository(dbClient)
+	repo := NewHumanMongoRepository(dbClient)
 	expected := model.Human{Name: "create", Age: 11, Male: false}
 	expected.ID = uuid.NewV1().String()
 	err := repo.Create(ctx, expected)
@@ -34,7 +33,7 @@ func TestHumanMongoCreate(t *testing.T) {
 func TestHumanMongoGet(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("human")
-	repo := repository.NewMongoRepository(dbClient)
+	repo := NewHumanMongoRepository(dbClient)
 	expected := model.Human{Name: "get", Age: 11, Male: false}
 	expected.ID = uuid.NewV1().String()
 	_, err := collection.InsertOne(ctx, expected)
@@ -50,7 +49,7 @@ func TestHumanMongoGet(t *testing.T) {
 func TestHumanMongoUpdate(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("human")
-	repo := repository.NewMongoRepository(dbClient)
+	repo := NewHumanMongoRepository(dbClient)
 	expected := model.Human{Name: "update", Age: 11, Male: false}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)
@@ -72,7 +71,7 @@ func TestHumanMongoUpdate(t *testing.T) {
 func TestHumanMongoDelete(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("human")
-	repo := repository.NewMongoRepository(dbClient)
+	repo := NewHumanMongoRepository(dbClient)
 	expected := model.Human{Name: "delete", Age: 11, Male: false}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)

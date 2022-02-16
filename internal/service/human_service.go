@@ -12,12 +12,12 @@ import (
 
 // HumanService wraps human repository implementing business logic of app
 type HumanService struct {
-	r     repository.Repository
+	r     repository.HumanRepository
 	cache repository.HumanCacheRepository
 }
 
 // NewHumanService returns instance of HumanService
-func NewHumanService(r repository.Repository, cache repository.HumanCacheRepository) *HumanService {
+func NewHumanService(r repository.HumanRepository, cache repository.HumanCacheRepository) *HumanService {
 	return &HumanService{r: r, cache: cache}
 }
 

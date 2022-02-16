@@ -1,4 +1,4 @@
-package dockertest
+package repository
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/HekapOo-hub/Task1/internal/model"
-	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,7 +15,7 @@ import (
 func TestTokenCreate(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("tokens")
-	repo := repository.NewMongoTokenRepository(dbClient)
+	repo := NewMongoTokenRepository(dbClient)
 	expected := model.Token{Login: "create", Value: "wwefgsdgoj", ExpiresAt: 123123}
 
 	err := repo.Create(ctx, expected)
@@ -33,7 +32,7 @@ func TestTokenCreate(t *testing.T) {
 func TestTokenGet(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("tokens")
-	repo := repository.NewMongoTokenRepository(dbClient)
+	repo := NewMongoTokenRepository(dbClient)
 	expectedValue := "aufgbafg"
 	expected := model.Token{Login: "get",
 		Value: fmt.Sprintf("%x", sha256.Sum256([]byte(expectedValue))), ExpiresAt: 123123}
@@ -50,7 +49,7 @@ func TestTokenGet(t *testing.T) {
 func TestTokenDelete(t *testing.T) {
 	ctx := context.Background()
 	collection := dbClient.Database("myDatabase").Collection("tokens")
-	repo := repository.NewMongoTokenRepository(dbClient)
+	repo := NewMongoTokenRepository(dbClient)
 	expectedValue := "aufgbafg"
 	expected := model.Token{Login: "delete",
 		Value: fmt.Sprintf("%x", sha256.Sum256([]byte(expectedValue))), ExpiresAt: 123123}

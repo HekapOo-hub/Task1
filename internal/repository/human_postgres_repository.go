@@ -8,26 +8,26 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// Repository is a crud interface for working with db where people info stored
-type Repository interface {
+// HumanRepository is a crud interface for working with db where people info stored
+type HumanRepository interface {
 	Create(ctx context.Context, human model.Human) error
 	Get(ctx context.Context, name string) (*model.Human, error)
 	Update(ctx context.Context, name string, human model.Human) error
 	Delete(ctx context.Context, name string) error
 }
 
-// PostgresRepository implements crud interface with human entity
-type PostgresRepository struct {
+// HumanPostgresRepository implements crud interface with human entity
+type HumanPostgresRepository struct {
 	db *pgxpool.Pool
 }
 
-// NewRepository returns new PostgresRepository
-func NewRepository(p *pgxpool.Pool) *PostgresRepository {
-	return &PostgresRepository{db: p}
+// NewHumanRepository returns new PostgresRepository
+func NewHumanRepository(p *pgxpool.Pool) *HumanPostgresRepository {
+	return &HumanPostgresRepository{db: p}
 }
 
 // Create is used for creating human info in db
-func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
+func (r *HumanPostgresRepository) Create(ctx context.Context, h model.Human) error {
 	query := "insert into people (id,name,male,age) values ($1,$2,$3,$4)"
 	_, err := r.db.Exec(ctx, query, h.ID, h.Name, h.Male, h.Age)
 	if err != nil {
@@ -37,7 +37,7 @@ func (r *PostgresRepository) Create(ctx context.Context, h model.Human) error {
 }
 
 // Get is used for getting human info from db
-func (r *PostgresRepository) Get(ctx context.Context, name string) (*model.Human, error) {
+func (r *HumanPostgresRepository) Get(ctx context.Context, name string) (*model.Human, error) {
 	h := model.Human{}
 	row := r.db.QueryRow(ctx, `select * from people where name=$1`, name)
 	err := row.Scan(&h.ID, &h.Name, &h.Male, &h.Age)
@@ -48,7 +48,7 @@ func (r *PostgresRepository) Get(ctx context.Context, name string) (*model.Human
 }
 
 // Update is used for updating human info in db
-func (r *PostgresRepository) Update(ctx context.Context, name string, h model.Human) error {
+func (r *HumanPostgresRepository) Update(ctx context.Context, name string, h model.Human) error {
 	query := "update people set  name=$1,male=$2,age=$3 where name=$4"
 	_, err := r.db.Exec(ctx, query, h.Name, h.Male, h.Age, name)
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *PostgresRepository) Update(ctx context.Context, name string, h model.Hu
 }
 
 // Delete is used for deleting human info from db
-func (r *PostgresRepository) Delete(ctx context.Context, name string) error {
+func (r *HumanPostgresRepository) Delete(ctx context.Context, name string) error {
 	rowsAffected, err := r.db.Exec(ctx, "delete from people where name=$1", name)
 	if err != nil {
 		return fmt.Errorf("postgres delete error %w", err)

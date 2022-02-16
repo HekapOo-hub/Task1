@@ -1,16 +1,7 @@
 version: '3.8'
 
 services:
-  crud:
-    restart: always
-    image: crud
-    ports:
-      - "1323:1323"
-    environment:
-      MONGO_URI: "mongodb://mongo:27017"
-      POSTGRES_HOST: "postgres"
-      POSTGRES_PORT: "5432"
-      REDIS_ADDR: "redis:6379"
+
   postgres:
     image: postgres:latest
     environment:

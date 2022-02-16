@@ -93,7 +93,7 @@ func (a *AuthService) Authenticate(ctx context.Context, user *model.User, passwo
 	}
 	err = a.r.Create(ctx, *refreshToken)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
+		return "", "", fmt.Errorf("service layer mongo create token error %w", err)
 	}
 	return accessToken.Value, refreshToken.Value, nil
 }
@@ -104,7 +104,7 @@ func (a *AuthService) Refresh(ctx context.Context, claims *config.TokenClaims, t
 	login := claims.Login
 	err = a.r.Delete(ctx, token)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer  mongo delete token error %w", err)
+		return "", "", fmt.Errorf("service layer mongo delete token error %w", err)
 	}
 	accessToken, refreshToken, err := a.getTokens(&model.User{Role: role, Login: login})
 	if err != nil {
@@ -112,7 +112,7 @@ func (a *AuthService) Refresh(ctx context.Context, claims *config.TokenClaims, t
 	}
 	err = a.r.Create(ctx, *refreshToken)
 	if err != nil {
-		return "", "", fmt.Errorf("service layer  mongo create token error %w", err)
+		return "", "", fmt.Errorf("service layer mongo create token error %w", err)
 	}
 	return accessToken.Value, refreshToken.Value, nil
 }

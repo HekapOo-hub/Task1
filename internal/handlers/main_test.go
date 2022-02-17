@@ -1,10 +1,9 @@
-package main
+package handlers
 
 import (
 	"context"
 	"fmt"
 	"github.com/HekapOo-hub/Task1/internal/config"
-	"github.com/HekapOo-hub/Task1/internal/handlers"
 	"github.com/HekapOo-hub/Task1/internal/model"
 	"github.com/HekapOo-hub/Task1/internal/repository"
 	"github.com/HekapOo-hub/Task1/internal/service"
@@ -16,7 +15,6 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	log "github.com/sirupsen/logrus"
-	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
@@ -30,12 +28,16 @@ var (
 	postgresClient *pgxpool.Pool
 	mongoClient    *mongo.Client
 	redisClient    *redis.Client
+
+	accessToken  string
+	refreshToken string
 )
 
 func TestMain(m *testing.M) {
-	startPostgres()
-	startMongo()
-	startRedis()
+	postgresPool, postgresResource := startPostgres()
+	mongoPool, mongoResource := startMongo()
+	redisPool, redisResource := startRedis()
+
 	hash, err := bcrypt.GenerateFromPassword([]byte("1234"), bcrypt.DefaultCost)
 	if err != nil {
 		log.Errorf("can't create hash password for user")
@@ -49,43 +51,65 @@ func TestMain(m *testing.M) {
 	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(ctx, redisClient)
 	defer cancel()
 	userRepo := repository.NewMongoUserRepository(mongoClient)
-	h := handlers.NewHumanHandler(service.NewHumanService(repository.NewHumanRepository(postgresClient), redisCacheHumanRepository),
+	humanHandler := NewHumanHandler(service.NewHumanService(repository.NewHumanRepository(postgresClient), redisCacheHumanRepository),
 		service.NewAuthService(repository.NewMongoTokenRepository(mongoClient)))
-	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
+	userHandler := NewUserHandler(service.NewUserService(userRepo),
 		service.NewAuthService(repository.NewMongoTokenRepository(mongoClient)))
-	h3 := handlers.FileHandler{}
-	e := echo.New()
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	fileHandler := &FileHandler{}
+	echoServer := echo.New()
 	validator, err := validation.NewValidator()
 	if err != nil {
 		log.Warnf("echo validator error %v", err)
-		return
 	}
-	e.Validator = validator
-	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
-	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
-	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(config.GetRefreshTokenConfig()))
-	accessGroup2.POST("create", h.Create)
-	accessGroup2.GET("get/:name", h.Get)
-	accessGroup2.PATCH("update", h.Update)
-	accessGroup2.DELETE("delete/:name", h.Delete)
-	accessGroup1.GET("get/:login", h2.Get)
-	accessGroup1.POST("create", h2.Create)
-	accessGroup1.PATCH("update", h2.Update)
-	e.GET("/signIn", h2.Authenticate)
-	e.GET("/file/download/:fileName", h3.Download)
-	e.GET("/file/upload/:fileName", h3.Upload)
-	accessGroup1.DELETE("delete/:login", h2.Delete)
-	refreshGroup.GET("update", h2.Refresh)
-	refreshGroup.DELETE("logOut", h2.LogOut)
-	err = e.Start(":1324")
-	if err != nil {
-		log.Warnf("error with starting an echo server: %v", err)
-		return
+	echoServer.Validator = validator
+
+	userAccessGroup := echoServer.Group("/user/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	humanAccessGroup := echoServer.Group("/human/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	refreshGroup := echoServer.Group("/refresh/", middleware.JWTWithConfig(config.GetRefreshTokenConfig()))
+	humanAccessGroup.POST("create", humanHandler.Create)
+	humanAccessGroup.GET("get/:name", humanHandler.Get)
+	humanAccessGroup.PATCH("update", humanHandler.Update)
+	humanAccessGroup.DELETE("delete/:name", humanHandler.Delete)
+	userAccessGroup.GET("get/:login", userHandler.Get)
+	userAccessGroup.POST("create", userHandler.Create)
+	userAccessGroup.PATCH("update", userHandler.Update)
+	echoServer.GET("/signIn", userHandler.Authenticate)
+	userAccessGroup.GET("file/download/:fileName", fileHandler.Download)
+	userAccessGroup.GET("file/upload/:fileName", fileHandler.Upload)
+	userAccessGroup.DELETE("delete/:login", userHandler.Delete)
+	refreshGroup.GET("update", userHandler.Refresh)
+	refreshGroup.DELETE("logOut", userHandler.LogOut)
+	go func() {
+		err = echoServer.Start(":1323")
+		if err != nil {
+			log.Warnf("error with starting an echo server: %v", err)
+			return
+		}
+	}()
+	time.Sleep(time.Second)
+	code := m.Run()
+	if err := redisPool.Purge(redisResource); err != nil {
+		log.Errorf("Could not purge resource: %s", err)
 	}
+	// You can't defer this because os.Exit doesn't care for defer
+	if err := postgresPool.Purge(postgresResource); err != nil {
+		log.Errorf("Could not purge resource: %s", err)
+	}
+
+	// disconnect mongodb client
+	if err := mongoPool.Purge(mongoResource); err != nil {
+		log.Errorf("Could not purge resource: %s", err)
+	}
+
+	// disconnect mongodb client
+	if err := mongoClient.Disconnect(context.TODO()); err != nil {
+		log.Errorf("mongo disconnection error %v", err)
+	}
+	os.Exit(code)
+
 }
 
-func startPostgres() {
+func startPostgres() (*dockertest.Pool, *dockertest.Resource) {
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -115,7 +139,7 @@ func startPostgres() {
 	flywayURL := fmt.Sprintf("jdbc:postgresql://%s/testDB", hostAndPort)
 	log.Info("Connecting to database on url: ", databaseUrl)
 	log.Info("flyway url: ", flywayURL)
-	err = postgresResource.Expire(180) // Tell docker to hard kill the container in 120 seconds
+	err = postgresResource.Expire(60) // Tell docker to hard kill the container in 120 seconds
 	if err != nil {
 		log.Errorf("Could not start resource: %s", err)
 	}
@@ -140,9 +164,10 @@ func startPostgres() {
 		postgresClient.Close()
 		log.Errorf("flyway execution error %v", err)
 	}
+	return pool, postgresResource
 }
 
-func startMongo() {
+func startMongo() (*dockertest.Pool, *dockertest.Resource) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -185,13 +210,14 @@ func startMongo() {
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	err = mongoResource.Expire(180) // Tell docker to hard kill the container in 120 seconds
+	err = mongoResource.Expire(60) // Tell docker to hard kill the container in 120 seconds
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
+	return pool, mongoResource
 }
 
-func startRedis() {
+func startRedis() (*dockertest.Pool, *dockertest.Resource) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Errorf("Could not connect to docker: %s", err)
@@ -211,8 +237,9 @@ func startRedis() {
 	}); err != nil {
 		log.Errorf("Could not connect to docker: %s", err)
 	}
-	err = resource.Expire(180)
+	err = resource.Expire(60) // Tell docker to hard kill the container in 120 seconds
 	if err != nil {
 		log.Errorf("Could not start resource: %s", err)
 	}
+	return pool, resource
 }

@@ -33,7 +33,7 @@ func NewMongoUserRepository(c *mongo.Client) *MongoUserRepository {
 // Create is used for creating human info in db
 func (m *MongoUserRepository) Create(ctx context.Context, user model.User) error {
 	user.ID = uuid.NewV4().String()
-	user.Role = "admin"
+	user.Role = "user"
 	_, err := m.collection.InsertOne(ctx, user)
 	if err != nil {
 		return fmt.Errorf("mongo creation user error %w", err)

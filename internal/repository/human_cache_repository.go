@@ -90,7 +90,7 @@ func (r *RedisHumanCacheRepository) listen(ctx context.Context) {
 				Streams: []string{config.RedisStream, r.lastID},
 			}).Result()
 			if err != nil {
-				log.Warnf("read stream error:%v", err)
+				//log.Warnf("read stream error:%v", err)
 				continue
 			}
 			if res[0].Messages == nil {

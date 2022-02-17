@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var dbClient *mongo.Client
+var mongoClient *mongo.Client
 
 func TestUserCreate(t *testing.T) {
 	ctx := context.Background()
-	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := NewMongoUserRepository(dbClient)
+	collection := mongoClient.Database("myDatabase").Collection("users")
+	repo := NewMongoUserRepository(mongoClient)
 	expected := model.User{Login: "create", Password: "1234"}
 	err := repo.Create(ctx, expected)
 	require.NoError(t, err)
@@ -30,8 +30,8 @@ func TestUserCreate(t *testing.T) {
 
 func TestUserGet(t *testing.T) {
 	ctx := context.Background()
-	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := NewMongoUserRepository(dbClient)
+	collection := mongoClient.Database("myDatabase").Collection("users")
+	repo := NewMongoUserRepository(mongoClient)
 	expected := model.User{Login: "get", Password: "1234"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)
@@ -44,8 +44,8 @@ func TestUserGet(t *testing.T) {
 
 func TestUserUpdate(t *testing.T) {
 	ctx := context.Background()
-	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := NewMongoUserRepository(dbClient)
+	collection := mongoClient.Database("myDatabase").Collection("users")
+	repo := NewMongoUserRepository(mongoClient)
 	expected := model.User{Login: "update", Password: "12345"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)
@@ -63,8 +63,8 @@ func TestUserUpdate(t *testing.T) {
 
 func TestUserDelete(t *testing.T) {
 	ctx := context.Background()
-	collection := dbClient.Database("myDatabase").Collection("users")
-	repo := NewMongoUserRepository(dbClient)
+	collection := mongoClient.Database("myDatabase").Collection("users")
+	repo := NewMongoUserRepository(mongoClient)
 	expected := model.User{Login: "delete", Password: "12345"}
 	_, err := collection.InsertOne(ctx, expected)
 	require.NoError(t, err)

@@ -1,0 +1,60 @@
+syntax= "proto3";
+
+package protobuf;
+
+option go_package = "github.com/HekapOo-hub/Task1/internal/proto";
+
+service HumanService {
+  rpc CreateHuman(Human) returns (Empty) {}
+  rpc UpdateHuman(UpdateHumanRequest) returns (Empty) {}
+  rpc GetHuman(Name) returns (Human) {}
+  rpc DeleteHuman(Name) returns (Empty) {}
+  rpc Authenticate(SignInRequest) returns (Tokens) {}
+  rpc CreateUser(CreateUserRequest) returns (Empty) {}
+  rpc GetUser(Login) returns (User) {}
+  rpc UpdateUser(UpdateUserRequest) returns (Empty) {}
+  rpc DeleteUser(Login) returns (Empty) {}
+  rpc Refresh(Empty) returns (Empty) {}
+  rpc LogOut(Empty) returns (Empty) {}
+  rpc DownloadFile(Name) returns (Empty) {}
+  rpc UploadFile(Name) returns (Empty) {}
+}
+message Human {
+  string name=1;
+  int32 age=2;
+  bool male=3;
+}
+message Empty {}
+message UpdateHumanRequest {
+  string oldName=1;
+  Human human=2;
+}
+message Name {
+  string value=1;
+}
+message SignInRequest {
+  string login=1;
+  string password=2;
+}
+message Tokens {
+  string access=1;
+  string refresh=2;
+}
+message User {
+  string login=1;
+  string password=2;
+  string role=3;
+}
+message CreateUserRequest {
+  string login=1;
+  string password=2;
+  string confirmPwd=3;
+}
+message Login {
+  string value=1;
+}
+message UpdateUserRequest {
+  string oldLogin=1;
+  string newLogin=2;
+  string newPassword=3;
+}

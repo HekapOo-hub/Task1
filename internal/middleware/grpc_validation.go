@@ -40,10 +40,10 @@ func streamServerValidationInterceptor(srv interface{}, ss grpc.ServerStream,
 	return handler(srv, wrapped)
 }
 
-func WithUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+func UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return grpc_middleware.ChainUnaryServer(unaryServerValidationInterceptor, unaryServerAuthorizationInterceptor)
 }
 
-func WithStreamServerInterceptor() grpc.StreamServerInterceptor {
+func StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return grpc_middleware.ChainStreamServer(streamServerValidationInterceptor, streamServerAuthorizationInterceptor)
 }

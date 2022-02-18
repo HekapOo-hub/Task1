@@ -43,6 +43,7 @@ func validateToken(token string) error {
 }
 func unaryServerAuthorizationInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (interface{}, error) {
+	// skip authorization in log out and refresh
 	if info.FullMethod != "/proto.|||Service/LogOut" && info.FullMethod != "/proto.|||Service/Refresh" {
 		if err := authFunc(ctx); err != nil {
 			return nil, err

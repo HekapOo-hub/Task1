@@ -79,6 +79,7 @@ func (r *RedisHumanCacheRepository) Delete(name string) error {
 }
 
 func (r *RedisHumanCacheRepository) listen(ctx context.Context) {
+
 	for {
 		select {
 		case <-ctx.Done():

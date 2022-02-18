@@ -62,11 +62,3 @@ func streamServerAuthorizationInterceptor(srv interface{}, ss grpc.ServerStream,
 	wrapped := grpc_middleware.WrapServerStream(ss)
 	return handler(srv, wrapped)
 }
-
-func WithUnaryServerAuthorizationInterceptor() grpc.ServerOption {
-	return grpc.UnaryInterceptor(unaryServerAuthorizationInterceptor)
-}
-
-func WithStreamServerAuthorizationInterceptor() grpc.ServerOption {
-	return grpc.StreamInterceptor(streamServerValidationInterceptor)
-}

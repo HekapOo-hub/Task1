@@ -13,24 +13,10 @@ import (
 	"testing"
 )
 
-func TestFileHandler_Download(t *testing.T) {
-	fileName := "myFile.png"
-	_, err := createImage(fileName)
-	require.NoError(t, err)
-	request, err := http.NewRequest(http.MethodGet,
-		"http://localhost:1323/user/file/download/"+fileName, nil)
-	require.NoError(t, err)
-	request.Header.Set("Authorization", "Bearer "+accessToken)
-	_, err = (&http.Client{}).Do(request)
-	require.NoError(t, err)
-	err = os.Remove(filepath.Clean(fileName))
-	require.NoError(t, err)
-}
-
 func TestFileHandler_Upload(t *testing.T) {
-	fileName := "upload.png"
+	file, err := createImage("upload.png")
 	request, err := http.NewRequest(http.MethodGet,
-		"http://localhost:1323/user/file/upload/"+fileName, nil)
+		url+"user/file/upload/"+file.Name(), nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := (&http.Client{}).Do(request)
@@ -44,7 +30,20 @@ func TestFileHandler_Upload(t *testing.T) {
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Equal(t, "file was uploaded!", string(responseBody))
+	err = os.Remove(filepath.Clean(file.Name()))
+	require.NoError(t, err)
 }
+
+func TestFileHandler_Download(t *testing.T) {
+	fileName := "myFile.png"
+	request, err := http.NewRequest(http.MethodGet,
+		url+"user/file/download/"+fileName, nil)
+	require.NoError(t, err)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	_, err = (&http.Client{}).Do(request)
+	require.NoError(t, err)
+}
+
 func createImage(fileName string) (*os.File, error) {
 	width := 200
 	height := 100

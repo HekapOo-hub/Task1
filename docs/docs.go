@@ -16,80 +16,6 @@ const docTemplate_swagger = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/file/download/{name}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "to download file from filesystem",
-                "tags": [
-                    "file"
-                ],
-                "summary": "download file from filesystem",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "filename",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "body"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "body"
-                        }
-                    }
-                }
-            }
-        },
-        "/file/upload/{name}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "to upload file from local variable which was previously downloaded",
-                "tags": [
-                    "file"
-                ],
-                "summary": "upload file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "filename",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "body"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "body"
-                        }
-                    }
-                }
-            }
-        },
         "/human/create": {
             "post": {
                 "security": [
@@ -402,6 +328,80 @@ const docTemplate_swagger = `{
                         "type": "string",
                         "description": "delete user info",
                         "name": "login",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "body"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "body"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/file/download/{name}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "to download file from filesystem",
+                "tags": [
+                    "file"
+                ],
+                "summary": "download file from filesystem",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "filename",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "body"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "body"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/file/upload/{name}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "to upload file from local variable which was previously downloaded",
+                "tags": [
+                    "file"
+                ],
+                "summary": "upload file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "filename",
+                        "name": "name",
                         "in": "path",
                         "required": true
                     }

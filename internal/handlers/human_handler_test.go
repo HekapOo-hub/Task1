@@ -63,7 +63,7 @@ func TestHumanHandler_Update(t *testing.T) {
 
 func TestHumanHandler_Get(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet,
-		"http://localhost:1323/human/get/updated", nil)
+		url+"human/get/updated", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := (&http.Client{}).Do(request)
@@ -81,7 +81,7 @@ func TestHumanHandler_Get(t *testing.T) {
 
 func TestHumanHandler_Delete(t *testing.T) {
 	request, err := http.NewRequest(http.MethodDelete,
-		"http://localhost:1323/human/delete/updated", nil)
+		url+"human/delete/updated", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := (&http.Client{}).Do(request)

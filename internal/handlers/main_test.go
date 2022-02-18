@@ -24,6 +24,10 @@ import (
 	"time"
 )
 
+const (
+	url = "http://localhost:1323/"
+)
+
 var (
 	postgresClient *pgxpool.Pool
 	mongoClient    *mongo.Client

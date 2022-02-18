@@ -33,7 +33,7 @@ func TestUserHandler_Create(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request, err := http.NewRequest(http.MethodPost,
-		"http://localhost:1323/user/create", bytes.NewBuffer(requestBody))
+		url+"user/create", bytes.NewBuffer(requestBody))
 	require.NoError(t, err)
 	request.Header.Set("Content-type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+accessToken)
@@ -51,7 +51,7 @@ func TestUserHandler_Create(t *testing.T) {
 }
 
 func TestUserHandler_Get(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "http://localhost:1323/user/get/noadmin", nil)
+	request, err := http.NewRequest(http.MethodGet, url+"user/get/noadmin", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := (&http.Client{}).Do(request)
@@ -75,7 +75,7 @@ func TestUserHandler_Update(t *testing.T) {
 		"password": "12345",
 	})
 	request, err := http.NewRequest(http.MethodPatch,
-		"http://localhost:1323/user/update", bytes.NewBuffer(requestBody))
+		url+"user/update", bytes.NewBuffer(requestBody))
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	request.Header.Set("Content-type", "application/json")
@@ -94,7 +94,7 @@ func TestUserHandler_Update(t *testing.T) {
 
 func TestUserHandler_Delete(t *testing.T) {
 	request, err := http.NewRequest(http.MethodDelete,
-		"http://localhost:1323/user/delete/updated", nil)
+		url+"user/delete/updated", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := (&http.Client{}).Do(request)
@@ -112,7 +112,7 @@ func TestUserHandler_Delete(t *testing.T) {
 
 func TestUserHandler_Refresh(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet,
-		"http://localhost:1323/refresh/update", nil)
+		url+"refresh/update", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+refreshToken)
 	request.Header.Set("Content-type", "application/json")
@@ -132,7 +132,7 @@ func TestUserHandler_Refresh(t *testing.T) {
 
 func TestUserHandler_LogOut(t *testing.T) {
 	request, err := http.NewRequest(http.MethodDelete,
-		"http://localhost:1323/refresh/logOut", nil)
+		url+"refresh/logOut", nil)
 	require.NoError(t, err)
 	request.Header.Set("Authorization", "Bearer "+refreshToken)
 	resp, err := (&http.Client{}).Do(request)

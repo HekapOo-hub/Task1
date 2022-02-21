@@ -2,7 +2,7 @@ syntax= "proto3";
 
 package protobuf;
 
-option go_package = "github.com/HekapOo-hub/Task1/internal/proto";
+option go_package = "./humanpb";
 
 service HumanService {
   rpc CreateHuman(Human) returns (Empty) {}

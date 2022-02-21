@@ -38,26 +38,24 @@ func main() {
 		log.Warnf("postgres config error: %v", err)
 		return
 	}
-	pool, err := pgxpool.Connect(context.Background(), cfg.GetURL())
+	postgresClient, err := pgxpool.Connect(context.Background(), cfg.GetURL())
 	if err != nil {
 		log.Warnf("postgres connect error: %v", err)
 		return
 	}
-	defer pool.Close()
-
-	repo := repository.NewHumanRepository(pool)
+	defer postgresClient.Close()
 
 	uri, err := config.GetMongoURI()
 	if err != nil {
 		log.Warnf("error: %v", err)
 		return
 	}
-	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	mongoClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 	if err != nil {
 		log.WithField("uri", uri).Warnf("error with connecting to mongodb: %v", err)
 		return
 	}
-	defer repository.MongoDisconnect(context.Background(), conn)
+	defer repository.MongoDisconnect(context.Background(), mongoClient)
 	redisCfg, err := config.NewRedisConfig()
 	if err != nil {
 		log.Warnf("redis get config error: %v", err)
@@ -72,40 +70,36 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	redisCacheHumanRepository := repository.NewRedisHumanCacheRepository(ctx, redisClient)
 	defer cancel()
-	userRepo := repository.NewMongoUserRepository(conn)
-	h := handlers.NewHumanHandler(service.NewHumanService(repo, redisCacheHumanRepository),
-		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
-	h2 := handlers.NewUserHandler(service.NewUserService(userRepo),
-		service.NewAuthService(repository.NewMongoTokenRepository(conn)))
-	h3 := handlers.FileHandler{}
-	e := echo.New()
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	userRepo := repository.NewMongoUserRepository(mongoClient)
+	humanHandler := handlers.NewHumanHandler(service.NewHumanService(repository.NewHumanRepository(postgresClient), redisCacheHumanRepository),
+		service.NewAuthService(repository.NewMongoTokenRepository(mongoClient)))
+	userHandler := handlers.NewUserHandler(service.NewUserService(userRepo),
+		service.NewAuthService(repository.NewMongoTokenRepository(mongoClient)))
+	fileHandler := &handlers.FileHandler{}
+	echoServer := echo.New()
+	echoServer.GET("/swagger/*", echoSwagger.WrapHandler)
 	validator, err := validation.NewValidator()
 	if err != nil {
 		log.Warnf("echo validator error %v", err)
 		return
 	}
-	e.Validator = validator
-	accessGroup1 := e.Group("/user/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
-	accessGroup2 := e.Group("/human/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
-	refreshGroup := e.Group("/refresh/", middleware.JWTWithConfig(config.GetRefreshTokenConfig()))
-	accessGroup2.POST("create", h.Create)
-	accessGroup2.GET("get/:name", h.Get)
-	accessGroup2.PATCH("update", h.Update)
-	accessGroup2.DELETE("delete/:name", h.Delete)
-	accessGroup1.GET("get/:login", h2.Get)
-	accessGroup1.POST("create", h2.Create)
-	accessGroup1.PATCH("update", h2.Update)
-	e.GET("/signIn", h2.Authenticate)
-	accessGroup1.GET("file/download/:fileName", h3.Download)
-	accessGroup1.GET("file/upload/:fileName", h3.Upload)
-	accessGroup1.DELETE("delete/:login", h2.Delete)
-	refreshGroup.GET("update", h2.Refresh)
-	refreshGroup.DELETE("logOut", h2.LogOut)
-	err = e.Start(":1323")
-	if err != nil {
-		log.Warnf("error with starting an echo server: %v", err)
-		return
-	}
+	echoServer.Validator = validator
+
+	userAccessGroup := echoServer.Group("/user/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	humanAccessGroup := echoServer.Group("/human/", middleware.JWTWithConfig(config.GetAccessTokenConfig()))
+	refreshGroup := echoServer.Group("/refresh/", middleware.JWTWithConfig(config.GetRefreshTokenConfig()))
+	humanAccessGroup.POST("create", humanHandler.Create)
+	humanAccessGroup.GET("get/:name", humanHandler.Get)
+	humanAccessGroup.PATCH("update", humanHandler.Update)
+	humanAccessGroup.DELETE("delete/:name", humanHandler.Delete)
+	userAccessGroup.GET("get/:login", userHandler.Get)
+	userAccessGroup.POST("create", userHandler.Create)
+	userAccessGroup.PATCH("update", userHandler.Update)
+	echoServer.GET("/signIn", userHandler.Authenticate)
+	userAccessGroup.GET("file/download/:fileName", fileHandler.Download)
+	userAccessGroup.GET("file/upload/:fileName", fileHandler.Upload)
+	userAccessGroup.DELETE("delete/:login", userHandler.Delete)
+	refreshGroup.GET("update", userHandler.Refresh)
+	refreshGroup.DELETE("logOut", userHandler.LogOut)
 
 }

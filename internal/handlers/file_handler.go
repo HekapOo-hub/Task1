@@ -28,7 +28,7 @@ type FileHandler struct {
 // @Router /user/file/download/{name} [get]
 func (f *FileHandler) Download(c echo.Context) error {
 	fileName := c.Param("fileName")
-	file, err := f.fileService.Download(c.Request().Context())
+	file, err := f.fileService.Download(c.Request().Context(), fileName)
 	if err != nil {
 		log.Warnf("file downloading error: %v", err)
 		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
@@ -63,7 +63,7 @@ func (f *FileHandler) Upload(c echo.Context) error {
 	fileName := c.Param("fileName")
 	file, err := os.Open(filepath.Clean(fileName))
 	if err != nil {
-		return fmt.Errorf("open file error in download %w", err)
+		return fmt.Errorf("open file error in upload %w", err)
 	}
 	err = f.fileService.Upload(c.Request().Context(), file)
 	if err != nil {

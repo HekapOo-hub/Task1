@@ -53,10 +53,9 @@ func (m *MongoTokenRepository) Get(ctx context.Context, token string) (*model.To
 }
 
 // Delete is used for deleting token info from db
-func (m *MongoTokenRepository) Delete(ctx context.Context, token string) error {
-	hashedToken := fmt.Sprintf("%x", sha256.Sum256([]byte(token)))
-	filter := bson.D{primitive.E{Key: "value", Value: hashedToken}}
-	delRes, err := m.collection.DeleteOne(ctx, filter)
+func (m *MongoTokenRepository) Delete(ctx context.Context, login string) error {
+	filter := bson.D{primitive.E{Key: "login", Value: login}}
+	delRes, err := m.collection.DeleteMany(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("mongo delete token error %w", err)
 	}

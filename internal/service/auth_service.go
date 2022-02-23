@@ -74,8 +74,8 @@ func (a *AuthService) Get(ctx context.Context, token string) (*model.Token, erro
 }
 
 // Delete is used for deleting human info from db
-func (a *AuthService) Delete(ctx context.Context, token string) error {
-	err := a.r.Delete(ctx, token)
+func (a *AuthService) Delete(ctx context.Context, login string) error {
+	err := a.r.Delete(ctx, login)
 	if err != nil {
 		return fmt.Errorf("authentication layer delete token error %w", err)
 	}

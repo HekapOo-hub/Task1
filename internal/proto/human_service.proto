@@ -4,6 +4,8 @@ package protobuf;
 
 option go_package = "./humanpb";
 
+
+
 service HumanService {
   rpc CreateHuman(Human) returns (Empty) {}
   rpc UpdateHuman(UpdateHumanRequest) returns (Empty) {}
@@ -14,26 +16,36 @@ service HumanService {
   rpc GetUser(Login) returns (User) {}
   rpc UpdateUser(UpdateUserRequest) returns (Empty) {}
   rpc DeleteUser(Login) returns (Empty) {}
-  rpc Refresh(Empty) returns (Empty) {}
+  rpc Refresh(Tokens) returns (Tokens) {}
   rpc LogOut(Empty) returns (Empty) {}
-  rpc DownloadFile(Name) returns (Empty) {}
-  rpc UploadFile(Name) returns (Empty) {}
+  rpc DownloadFile(stream Name) returns (stream FilePortion) {}
+  rpc UploadFile(stream Name) returns (stream Empty) {}
 }
 message Human {
+  // @inject_tag: validate:"required,max=40"
   string name=1;
+  // @inject_tag: validate:"required"
   int32 age=2;
+  // @inject_tag: validate:"required"
   bool male=3;
+  // @inject_tag: validate:"required"
+  string ID=4;
 }
-message Empty {}
+
 message UpdateHumanRequest {
+  // @inject_tag: validate:"required,max=40"
   string oldName=1;
+  // @inject_tag: validate:"required"
   Human human=2;
 }
 message Name {
+  // @inject_tag: validate:"required"
   string value=1;
 }
 message SignInRequest {
+  // @inject_tag: validate:"required"
   string login=1;
+  // @inject_tag: validate:"required"
   string password=2;
 }
 message Tokens {
@@ -41,20 +53,39 @@ message Tokens {
   string refresh=2;
 }
 message User {
+  // @inject_tag: validate:"required"
   string login=1;
+  // @inject_tag: validate:"required"
   string password=2;
+  // @inject_tag: validate:"required"
   string role=3;
+  // @inject_tag: validate:"required"
+  string ID=4;
 }
 message CreateUserRequest {
+  // @inject_tag: validate:"required"
   string login=1;
+  // @inject_tag: validate:"required"
   string password=2;
+  // @inject_tag: validate:"required,eqfield=Password"
   string confirmPwd=3;
 }
 message Login {
+  // @inject_tag: validate:"required"
   string value=1;
 }
 message UpdateUserRequest {
+  // @inject_tag: validate:"required"
   string oldLogin=1;
+  // @inject_tag: validate:"required"
   string newLogin=2;
+  // @inject_tag: validate:"required"
   string newPassword=3;
+}
+message FilePortion {
+  bytes value=1;
+  bool start=2;
+}
+message Empty {
+
 }

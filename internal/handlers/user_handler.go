@@ -38,7 +38,6 @@ func NewUserHandler(us *service.UserService, as *service.AuthService) *UserHandl
 // @Failure 400 body echo.NewHTTPError
 // @Router /signIn [get]
 func (u *UserHandler) Authenticate(c echo.Context) error {
-	log.Warn(fmt.Sprintf("request %v", c.Request()))
 	login := c.QueryParam("login")
 	password := c.QueryParam("password")
 	req := request.SignInRequest{Login: login, Password: password}

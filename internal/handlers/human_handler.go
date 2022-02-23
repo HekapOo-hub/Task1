@@ -16,12 +16,11 @@ import (
 // HumanHandler implements  crud interface with Human entity for echo server
 type HumanHandler struct {
 	humanService *service.HumanService
-	authService  *service.AuthService
 }
 
 // NewHumanHandler creates new human handler
-func NewHumanHandler(hs *service.HumanService, as *service.AuthService) *HumanHandler {
-	return &HumanHandler{humanService: hs, authService: as}
+func NewHumanHandler(hs *service.HumanService) *HumanHandler {
+	return &HumanHandler{humanService: hs}
 }
 
 // Create is used for creating human info in db
@@ -90,7 +89,7 @@ func (h *HumanHandler) Update(c echo.Context) error {
 	err := h.humanService.Update(c.Request().Context(), req.OldName, model.Human{Name: req.NewName,
 		Male: req.NewMale, Age: req.NewAge})
 	if err != nil {
-		log.WithField("error", err).Warn()
+		log.Warnf("%v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.String(http.StatusOK, "human info was updated")
